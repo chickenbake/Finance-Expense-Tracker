@@ -80,10 +80,15 @@ export const expenseService = {
   },
 
   addExpense: async (expenseData) => {
-    console.log('Sending expense data:', expenseData);
-    const response = await api.post('/expenses', expenseData);
-    console.log('Response received:', response.data);
-    return response.data;
+    const token = localStorage.getItem('token');
+    
+    try {
+      const response = await api.post('/expenses', expenseData);
+      return response.data;
+    } catch (error) {
+      console.error('🚨 API Error:', error.response?.status, error.response?.data);
+      throw error;
+    }
   },
 
   updateExpense: async (expenseId, expenseData) => {

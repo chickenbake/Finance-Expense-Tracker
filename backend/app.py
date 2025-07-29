@@ -90,7 +90,7 @@ def register():
         db.session.add(user)
         db.session.commit()
         
-        access_token = create_access_token(identity=user.id)
+        access_token = create_access_token(identity=str(user.id))
         
         return jsonify({
             'message': 'User created successfully',
@@ -116,9 +116,9 @@ def login():
         
         if not user or not user.check_password(password):
             return jsonify({'error': 'Invalid username or password'}), 401
-        
-        access_token = create_access_token(identity=user.id)
-        
+
+        access_token = create_access_token(identity=str(user.id))
+
         return jsonify({
             'message': 'Login successful',
             'access_token': access_token,
@@ -132,7 +132,7 @@ def login():
 @jwt_required()
 def get_expenses():
     try:
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         expenses = Expense.query.filter_by(user_id=user_id).order_by(Expense.date.desc()).all()
         return jsonify([expense.to_dict() for expense in expenses]), 200
     except Exception as e:
@@ -142,19 +142,16 @@ def get_expenses():
 @jwt_required()
 def add_expense():
     try:
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         data = request.get_json()
-        
-        print(f"Received data: {data}")  # Debug log
-        print(f"User ID: {user_id}")     # Debug log
         
         if not data:
             return jsonify({'error': 'No data provided'}), 400
         
         required_fields = ['amount', 'description', 'category', 'date']
         for field in required_fields:
-            if field not in data:
-                print(f"Missing field: {field}")  # Debug log
+            field_value = data.get(field)
+            if field not in data or not field_value or str(field_value).strip() == '':
                 return jsonify({'error': f'{field} is required'}), 400
         
         # Validate amount
@@ -162,21 +159,29 @@ def add_expense():
             amount = float(data['amount'])
             if amount <= 0:
                 return jsonify({'error': 'Amount must be greater than 0'}), 400
-        except (ValueError, TypeError) as e:
-            print(f"Amount validation error: {e}")  # Debug log
+        except (ValueError, TypeError):
             return jsonify({'error': 'Invalid amount format'}), 400
+        
+        # Validate description and category
+        desc_stripped = data['description'].strip()
+        cat_stripped = data['category'].strip()
+        
+        if not desc_stripped:
+            return jsonify({'error': 'Description cannot be empty'}), 400
+            
+        if not cat_stripped:
+            return jsonify({'error': 'Category cannot be empty'}), 400
         
         # Validate date
         try:
             expense_date = datetime.strptime(data['date'], '%Y-%m-%d').date()
-        except ValueError as e:
-            print(f"Date validation error: {e}")  # Debug log
+        except ValueError:
             return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
         
         expense = Expense(
             amount=amount,
-            description=data['description'].strip(),
-            category=data['category'].strip(),
+            description=desc_stripped,
+            category=cat_stripped,
             date=expense_date,
             user_id=user_id
         )
@@ -184,22 +189,19 @@ def add_expense():
         db.session.add(expense)
         db.session.commit()
         
-        print(f"Expense created successfully: {expense.to_dict()}")  # Debug log
-        
         return jsonify({
             'message': 'Expense added successfully',
             'expense': expense.to_dict()
         }), 201
         
     except Exception as e:
-        print(f"Unexpected error: {str(e)}")  # Debug log
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/expenses/<int:expense_id>', methods=['PUT'])
 @jwt_required()
 def update_expense(expense_id):
     try:
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         expense = Expense.query.filter_by(id=expense_id, user_id=user_id).first()
         
         if not expense:
@@ -245,7 +247,7 @@ def update_expense(expense_id):
 @jwt_required()
 def delete_expense(expense_id):
     try:
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         expense = Expense.query.filter_by(id=expense_id, user_id=user_id).first()
         
         if not expense:
@@ -263,7 +265,7 @@ def delete_expense(expense_id):
 @jwt_required()
 def get_dashboard_summary():
     try:
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         
         # Get current month expenses for pie chart
         current_month_start = datetime.now().replace(day=1).date()
@@ -324,10 +326,6 @@ def get_dashboard_summary():
 @app.route('/api/health', methods=['GET'])
 def health_check():
     return jsonify({'status': 'healthy', 'timestamp': datetime.utcnow().isoformat()}), 200
-
-@app.route('/api/test', methods=['GET'])
-def test_endpoint():
-    return jsonify({'message': 'Backend is working!', 'timestamp': datetime.utcnow().isoformat()}), 200
 
 # Initialize database
 with app.app_context():
