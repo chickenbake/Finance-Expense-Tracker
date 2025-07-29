@@ -156,77 +156,41 @@ def get_expenses():
 @jwt_required()
 def add_expense():
     try:
-        print("🔑 AUTHENTICATION PASSED - Inside add_expense function")
         user_id = int(get_jwt_identity())
-        print(f"🔑 User ID from JWT: {user_id}")
-        
         data = request.get_json()
         
-        print("=" * 50)
-        print("EXPENSE CREATION DEBUG")
-        print("=" * 50)
-        print(f"Raw request data: {data}")
-        print(f"Data type: {type(data)}")
-        print(f"User ID: {user_id}")
-        
-        if data:
-            for key, value in data.items():
-                print(f"Field '{key}': value='{value}', type={type(value)}, empty={not value or str(value).strip() == ''}")
-        
         if not data:
-            print("ERROR: No data provided")
             return jsonify({'error': 'No data provided'}), 400
         
         required_fields = ['amount', 'description', 'category', 'date']
         for field in required_fields:
             field_value = data.get(field)
-            is_missing = field not in data
-            is_empty = not field_value
-            is_whitespace = str(field_value).strip() == '' if field_value else True
-            
-            print(f"Field '{field}': missing={is_missing}, empty={is_empty}, whitespace={is_whitespace}, value='{field_value}'")
-            
-            if is_missing or is_empty or is_whitespace:
-                error_msg = f'{field} is required'
-                print(f"ERROR: {error_msg}")
-                return jsonify({'error': error_msg}), 400
+            if field not in data or not field_value or str(field_value).strip() == '':
+                return jsonify({'error': f'{field} is required'}), 400
         
         # Validate amount
-        print(f"Validating amount: '{data['amount']}'")
         try:
             amount = float(data['amount'])
-            print(f"Amount converted to: {amount}")
             if amount <= 0:
-                print(f"ERROR: Amount must be positive, got {amount}")
                 return jsonify({'error': 'Amount must be greater than 0'}), 400
-        except (ValueError, TypeError) as e:
-            print(f"ERROR: Amount validation failed: {e}")
+        except (ValueError, TypeError):
             return jsonify({'error': 'Invalid amount format'}), 400
         
         # Validate description and category
         desc_stripped = data['description'].strip()
         cat_stripped = data['category'].strip()
-        print(f"Description after strip: '{desc_stripped}' (length: {len(desc_stripped)})")
-        print(f"Category after strip: '{cat_stripped}' (length: {len(cat_stripped)})")
         
         if not desc_stripped:
-            print("ERROR: Description is empty after stripping")
             return jsonify({'error': 'Description cannot be empty'}), 400
             
         if not cat_stripped:
-            print("ERROR: Category is empty after stripping")
             return jsonify({'error': 'Category cannot be empty'}), 400
         
         # Validate date
-        print(f"Validating date: '{data['date']}'")
         try:
             expense_date = datetime.strptime(data['date'], '%Y-%m-%d').date()
-            print(f"Date parsed successfully: {expense_date}")
-        except ValueError as e:
-            print(f"ERROR: Date validation failed: {e}")
+        except ValueError:
             return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
-        
-        print("All validations passed, creating expense...")
         
         expense = Expense(
             amount=amount,
@@ -236,13 +200,8 @@ def add_expense():
             user_id=user_id
         )
         
-        print(f"Expense object created: {expense}")
-        
         db.session.add(expense)
         db.session.commit()
-        
-        print(f"Expense saved successfully!")
-        print(f"Expense details: {expense.to_dict()}")
         
         return jsonify({
             'message': 'Expense added successfully',
@@ -250,9 +209,6 @@ def add_expense():
         }), 201
         
     except Exception as e:
-        print(f"UNEXPECTED ERROR: {str(e)}")
-        import traceback
-        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/expenses/<int:expense_id>', methods=['PUT'])
