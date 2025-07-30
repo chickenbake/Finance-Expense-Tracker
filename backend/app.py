@@ -25,11 +25,17 @@ def get_database_url():
     # For local development
     return os.getenv('DATABASE_URL', 'sqlite:///expense_tracker.db')
 
-# Configuration
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key-change-this')
+# Configuration - Secure version
+secret_key = os.getenv('SECRET_KEY')
+jwt_secret_key = os.getenv('JWT_SECRET_KEY')
+
+if not secret_key or not jwt_secret_key:
+    raise ValueError("SECRET_KEY and JWT_SECRET_KEY must be set in environment variables")
+
+app.config['SECRET_KEY'] = secret_key
 app.config['SQLALCHEMY_DATABASE_URI'] = get_database_url()
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'jwt-secret-change-this')
+app.config['JWT_SECRET_KEY'] = jwt_secret_key
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=24)
 
 # Initialize extensions
