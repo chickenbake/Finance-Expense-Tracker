@@ -25,11 +25,14 @@ ChartJS.register(
 
 const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
+  const [aiInsights, setAiInsights] = useState('');
+  const [loadingInsights, setLoadingInsights] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     fetchDashboardData();
+    fetchAIInsights();
   }, []);
 
   const fetchDashboardData = async () => {
@@ -42,6 +45,26 @@ const Dashboard = () => {
       console.error('Dashboard error:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAIInsights = async () => {
+    try {
+      setLoadingInsights(true);
+      const response = await fetch('http://localhost:3000/api/insights', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setAiInsights(data.insights);
+      }
+    } catch (error) {
+      console.error('Failed to fetch AI insights:', error);
+    } finally {
+      setLoadingInsights(false);
     }
   };
 
@@ -132,6 +155,34 @@ const Dashboard = () => {
             {error}
           </div>
         )}
+
+        {/* AI Insights Card - NEW */}
+        <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg shadow-lg p-6 mb-8 text-white">
+          <div className="flex items-center mb-4">
+            <div className="bg-white bg-opacity-20 rounded-full p-2 mr-3">
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <h2 className="text-xl font-semibold">💡 AI Budget Insights</h2>
+          </div>
+          
+          {loadingInsights ? (
+            <div className="flex items-center">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              <span>Analyzing your spending patterns...</span>
+            </div>
+          ) : (
+            <p className="text-lg leading-relaxed">{aiInsights || 'Start adding expenses to get personalized insights!'}</p>
+          )}
+          
+          <button 
+            onClick={fetchAIInsights}
+            className="mt-4 bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg transition-all duration-200"
+          >
+            🔄 Refresh Insights
+          </button>
+        </div>
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">

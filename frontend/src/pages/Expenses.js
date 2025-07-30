@@ -14,13 +14,15 @@ const Expenses = () => {
     category: '',
     date: new Date().toISOString().split('T')[0],
   });
+  const [suggestedCategory, setSuggestedCategory] = useState('');
+  const [loadingCategory, setLoadingCategory] = useState(false);
 
   const categories = [
-    'Food',
-    'Transport',
+    'Food and Dining',
+    'Transportation',
     'Entertainment',
     'Shopping',
-    'Bills',
+    'Bills and Utilities',
     'Healthcare',
     'Education',
     'Travel',
@@ -105,6 +107,39 @@ const Expenses = () => {
     });
   };
 
+  // Add this function for AI categorization
+  const handleDescriptionChange = async (description) => {
+    setFormData({ ...formData, description });
+    
+    // Auto-suggest category when description has enough characters
+    if (description.length >= 3) {
+      setLoadingCategory(true);
+      try {
+        const response = await fetch('http://localhost:3000/api/expenses/categorize', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({ description })
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setSuggestedCategory(data.suggested_category);
+          // Auto-fill category if not already selected
+          if (!formData.category) {
+            setFormData(prev => ({ ...prev, category: data.suggested_category }));
+          }
+        }
+      } catch (error) {
+        console.error('Failed to get category suggestion:', error);
+      } finally {
+        setLoadingCategory(false);
+      }
+    }
+  };
+
   return (
     <div>
       <Navbar />
@@ -146,6 +181,31 @@ const Expenses = () => {
                     placeholder="0.00"
                   />
                 </div>
+                
+                <div>
+                  <label className="form-label">Description</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      required
+                      className="form-input"
+                      value={formData.description}
+                      onChange={(e) => handleDescriptionChange(e.target.value)}
+                      placeholder="e.g., Starbucks coffee"
+                    />
+                    {loadingCategory && (
+                      <div className="absolute right-2 top-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                      </div>
+                    )}
+                  </div>
+                  {suggestedCategory && (
+                    <p className="text-sm text-blue-600 mt-1">
+                      💡 AI suggested: {suggestedCategory}
+                    </p>
+                  )}
+                </div>
+
                 <div>
                   <label className="form-label">Category</label>
                   <select
@@ -162,17 +222,7 @@ const Expenses = () => {
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className="form-label">Description</label>
-                  <input
-                    type="text"
-                    required
-                    className="form-input"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="e.g., Lunch with client"
-                  />
-                </div>
+
                 <div>
                   <label className="form-label">Date</label>
                   <input
