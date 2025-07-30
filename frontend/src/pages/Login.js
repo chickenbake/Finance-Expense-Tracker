@@ -12,6 +12,8 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Clear error only when user submits the form
     setError('');
     setLoading(true);
 
@@ -19,10 +21,47 @@ const Login = () => {
       await login(username, password);
       navigate('/dashboard');
     } catch (error) {
-      setError(error.response?.data?.error || 'Login failed. Please try again.');
+      console.log('Login error:', error);
+      
+      let errorMessage = 'Login failed. Please try again.';
+      let errorType = 'general';
+      
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+        errorType = error.response.data.error_type || 'general';
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Invalid username or password';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
+      
+      // Handle field clearing based on error type
+      if (errorType === 'invalid_username') {
+        // Wrong username: clear both fields
+        setUsername('');
+        setPassword('');
+      } else if (errorType === 'invalid_password') {
+        // Wrong password: clear only password field, keep username
+        setPassword('');
+      } else {
+        // General error: clear password only
+        setPassword('');
+      }
+      
     } finally {
       setLoading(false);
     }
+  };
+
+  // Don't clear error on input changes - only on form submit
+  const handleUsernameChange = (e) => {
+    setUsername(e.target.value);
+  };
+
+  const handlePasswordChange = (e) => {
+    setPassword(e.target.value);
   };
 
   return (
@@ -55,7 +94,7 @@ const Login = () => {
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Username"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={handleUsernameChange}
               />
             </div>
             <div>
@@ -70,7 +109,7 @@ const Login = () => {
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={handlePasswordChange}
               />
             </div>
           </div>

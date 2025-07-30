@@ -69,7 +69,6 @@ export const AuthProvider = ({ children }) => {
       });
       return response;
     } catch (error) {
-      dispatch({ type: 'SET_LOADING', payload: false });
       throw error;
     }
   };
@@ -87,7 +86,6 @@ export const AuthProvider = ({ children }) => {
       });
       return response;
     } catch (error) {
-      dispatch({ type: 'SET_LOADING', payload: false });
       throw error;
     }
   };
