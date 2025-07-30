@@ -109,13 +109,16 @@ const Expenses = () => {
 
   // Add this function for AI categorization
   const handleDescriptionChange = async (description) => {
-    setFormData({ ...formData, description });
+    // Update description first
+    setFormData(prev => ({ ...prev, description }));
     
     // Auto-suggest category when description has enough characters
     if (description.length >= 3) {
       setLoadingCategory(true);
       try {
-        const response = await fetch('http://localhost:3000/api/expenses/categorize', {
+        console.log('🔍 Sending to AI:', description); // Debug
+        
+        const response = await fetch('http://localhost:5000/api/expenses/categorize', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -126,17 +129,28 @@ const Expenses = () => {
         
         if (response.ok) {
           const data = await response.json();
+          console.log('🎯 AI Response:', data); // Debug
           setSuggestedCategory(data.suggested_category);
-          // Auto-fill category if not already selected
-          if (!formData.category) {
-            setFormData(prev => ({ ...prev, category: data.suggested_category }));
-          }
+          
+          // ALWAYS auto-fill category with latest AI suggestion
+          console.log('✅ Auto-updating category to:', data.suggested_category); // Debug
+          setFormData(prev => ({ 
+            ...prev, 
+            category: data.suggested_category 
+          }));
+          
+        } else {
+          console.error('❌ API Error:', response.status);
         }
       } catch (error) {
-        console.error('Failed to get category suggestion:', error);
+        console.error('❌ Request failed:', error);
       } finally {
         setLoadingCategory(false);
       }
+    } else {
+      // Clear suggestions and reset category for short descriptions
+      setSuggestedCategory('');
+      setFormData(prev => ({ ...prev, category: '' }));
     }
   };
 
@@ -182,6 +196,25 @@ const Expenses = () => {
                   />
                 </div>
                 
+                {/* Category moved to top right */}
+                <div>
+                  <label className="form-label">Category</label>
+                  <select
+                    required
+                    className="form-input"
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  >
+                    <option value="">Select a category</option>
+                    {categories.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Description moved to bottom left */}
                 <div>
                   <label className="form-label">Description</label>
                   <div className="relative">
@@ -204,23 +237,6 @@ const Expenses = () => {
                       💡 AI suggested: {suggestedCategory}
                     </p>
                   )}
-                </div>
-
-                <div>
-                  <label className="form-label">Category</label>
-                  <select
-                    required
-                    className="form-input"
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  >
-                    <option value="">Select a category</option>
-                    {categories.map((category) => (
-                      <option key={category} value={category}>
-                        {category}
-                      </option>
-                    ))}
-                  </select>
                 </div>
 
                 <div>

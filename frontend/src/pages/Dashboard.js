@@ -51,7 +51,7 @@ const Dashboard = () => {
   const fetchAIInsights = async () => {
     try {
       setLoadingInsights(true);
-      const response = await fetch('http://localhost:3000/api/insights', {
+      const response = await fetch('http://localhost:5000/api/insights', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
