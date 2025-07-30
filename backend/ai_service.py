@@ -7,16 +7,21 @@ load_dotenv()
 class AIExpenseAnalyzer:
     def __init__(self):
         self.hf_token = os.getenv('HUGGING_FACE_TOKEN')
-        self.base_url = "https://api-inference.huggingface.co/models"
+        # Updated API URL to match the working sample
+        self.api_url = "https://api-inference.huggingface.co/models/facebook/bart-large-mnli"
+        print(f"HF Token exists: {bool(self.hf_token)}")  # Debug line
         
-    def categorize_expense(self, description):  # Remove 'async'
+    def categorize_expense(self, description):
         """Categorize expense using Hugging Face API"""
+        print(f"Categorizing: '{description}'")  # Debug line
+        
         if not self.hf_token:
+            print("No HF token, using fallback")  # Debug line
             return self._fallback_categorization(description)
             
-        headers = {"Authorization": f"Bearer {self.hf_token}"}
-        
-        model_url = f"{self.base_url}/facebook/bart-large-mnli"
+        headers = {
+            "Authorization": f"Bearer {self.hf_token}",
+        }
         
         candidate_labels = [
             "Food and Dining", "Transportation", "Entertainment", 
@@ -24,17 +29,40 @@ class AIExpenseAnalyzer:
             "Education", "Travel", "Other"
         ]
         
+        # Enhanced input with more context for better categorization
+        enhanced_input = f"This is an expense for: {description}. Categorize this expense."
+        
         payload = {
-            "inputs": description,
+            "inputs": enhanced_input,
             "parameters": {"candidate_labels": candidate_labels}
         }
         
         try:
-            response = requests.post(model_url, headers=headers, json=payload)
+            print("Calling Hugging Face API...")  # Debug line
+            response = requests.post(self.api_url, headers=headers, json=payload, timeout=10)
+            print(f"API Response status: {response.status_code}")  # Debug line
+            
             if response.status_code == 200:
                 result = response.json()
-                return result['labels'][0] if result['labels'] else 'Other'
+                print(f"API Result: {result}")  # Debug line
+                
+                # Check if we have labels in the response
+                if 'labels' in result and result['labels']:
+                    best_category = result['labels'][0]
+                    confidence = result['scores'][0] if 'scores' in result else 0
+                    print(f"AI suggests: {best_category} (confidence: {confidence:.2f})")  # Debug line
+                    
+                    # Only use AI result if confidence is reasonable
+                    if confidence > 0.17:
+                        return best_category
+                    else:
+                        print(f"Low confidence, using fallback")
+                        return self._fallback_categorization(description)
+                else:
+                    print("No labels in response, using fallback")  # Debug line
+                    return self._fallback_categorization(description)
             else:
+                print(f"API Error: {response.text}")  # Debug line
                 return self._fallback_categorization(description)
         except Exception as e:
             print(f"AI categorization error: {e}")
@@ -46,7 +74,7 @@ class AIExpenseAnalyzer:
             return self._fallback_insights(expenses_data)
             
         headers = {"Authorization": f"Bearer {self.hf_token}"}
-        model_url = f"{self.base_url}/microsoft/DialoGPT-medium"
+        model_url = "https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium"
         
         # Create a summary of spending patterns
         total_amount = sum(exp['amount'] for exp in expenses_data)
@@ -73,7 +101,7 @@ class AIExpenseAnalyzer:
             return self._fallback_insights(expenses_data)
     
     def _fallback_categorization(self, description):
-        # Simple keyword-based categorization as fallback
+        """Simple keyword-based categorization as fallback"""
         description_lower = description.lower()
         
         food_keywords = ['restaurant', 'food', 'grocery', 'coffee', 'lunch', 'dinner', 'pizza', 'burger']
@@ -81,6 +109,10 @@ class AIExpenseAnalyzer:
         entertainment_keywords = ['movie', 'cinema', 'game', 'concert', 'music', 'netflix']
         shopping_keywords = ['amazon', 'store', 'mall', 'clothes', 'shoes', 'shopping']
         bills_keywords = ['electric', 'water', 'internet', 'phone', 'rent', 'mortgage', 'utility']
+        healthcare_keywords = ['doctor', 'hospital', 'pharmacy', 'medicine', 'dental', 'medical', 'clinic', 'health']
+        education_keywords = ['school', 'university', 'college', 'tuition', 'books', 'education', 'course', 'class']
+        travel_keywords = ['hotel', 'flight', 'airline', 'vacation', 'trip', 'travel', 'airbnb', 'booking']
+        
         
         if any(keyword in description_lower for keyword in food_keywords):
             return 'Food and Dining'
@@ -92,6 +124,12 @@ class AIExpenseAnalyzer:
             return 'Shopping'
         elif any(keyword in description_lower for keyword in bills_keywords):
             return 'Bills and Utilities'
+        elif any(keyword in description_lower for keyword in healthcare_keywords):
+            return 'Healthcare'
+        elif any(keyword in description_lower for keyword in education_keywords):
+            return 'Education'
+        elif any(keyword in description_lower for keyword in travel_keywords):
+            return 'Travel'
         else:
             return 'Other'
     
