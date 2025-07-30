@@ -6,6 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 import os
 from dotenv import load_dotenv
+from ai_service import ai_analyzer
 
 load_dotenv()
 
@@ -340,6 +341,50 @@ def get_dashboard_summary():
             'daily_spending': sorted_daily_totals,
             'total_current_month': sum(category_totals.values()),
             'total_last_30_days': sum(daily_totals.values())
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/expenses/categorize', methods=['POST'])
+@jwt_required()
+def categorize_expense():
+    try:
+        data = request.get_json()
+        if not data or not data.get('description'):
+            return jsonify({'error': 'Description is required'}), 400
+        
+        description = data['description'].strip()
+        category = ai_analyzer.categorize_expense(description)
+        
+        return jsonify({
+            'suggested_category': category,
+            'description': description
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/insights', methods=['GET'])
+@jwt_required()
+def get_ai_insights():
+    try:
+        user_id = int(get_jwt_identity())
+        
+        # Get last 30 days of expenses
+        thirty_days_ago = (datetime.now() - timedelta(days=30)).date()
+        expenses = Expense.query.filter(
+            Expense.user_id == user_id,
+            Expense.date >= thirty_days_ago
+        ).all()
+        
+        expenses_data = [expense.to_dict() for expense in expenses]
+        insights = ai_analyzer.get_spending_insights(expenses_data)
+        
+        return jsonify({
+            'insights': insights,
+            'period': '30 days',
+            'total_expenses': len(expenses_data)
         }), 200
         
     except Exception as e:
