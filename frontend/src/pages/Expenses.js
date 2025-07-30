@@ -8,11 +8,25 @@ const Expenses = () => {
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
+
+  // Helper function to get today's date in PST (Los Angeles timezone)
+  const getTodayPST = () => {
+    const today = new Date();
+    // Convert to PST (UTC-8) or PDT (UTC-7) depending on daylight saving
+    const pstDate = new Date(today.toLocaleString("en-US", {timeZone: "America/Los_Angeles"}));
+    
+    const year = pstDate.getFullYear();
+    const month = String(pstDate.getMonth() + 1).padStart(2, '0');
+    const day = String(pstDate.getDate()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
+  };
+
   const [formData, setFormData] = useState({
     amount: '',
     description: '',
     category: '',
-    date: new Date().toISOString().split('T')[0],
+    date: getTodayPST(), // Use PST date
   });
 
   const categories = [
@@ -48,6 +62,10 @@ const Expenses = () => {
     e.preventDefault();
     setError('');
 
+    // Add debugging for timezone
+    console.log('Current PST date:', getTodayPST());
+    console.log('Form date being sent:', formData.date);
+
     try {
       if (editingExpense) {
         await expenseService.updateExpense(editingExpense.id, formData);
@@ -59,7 +77,7 @@ const Expenses = () => {
         amount: '',
         description: '',
         category: '',
-        date: new Date().toISOString().split('T')[0],
+        date: getTodayPST(), // Reset to PST date
       });
       setShowForm(false);
       setEditingExpense(null);
@@ -101,7 +119,18 @@ const Expenses = () => {
       amount: '',
       description: '',
       category: '',
-      date: new Date().toISOString().split('T')[0],
+      date: getTodayPST(), // Reset to PST date
+    });
+  };
+
+  // Helper function to format dates in PST for display
+  const formatDatePST = (dateString) => {
+    const date = new Date(dateString + 'T00:00:00'); // Treat as local date
+    return date.toLocaleDateString('en-US', {
+      timeZone: 'America/Los_Angeles',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
     });
   };
 
@@ -111,12 +140,17 @@ const Expenses = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Expenses</h1>
-          <button
-            onClick={() => setShowForm(true)}
-            className="btn-primary"
-          >
-            Add Expense
-          </button>
+          <div className="flex items-center space-x-4">
+            <span className="text-sm text-gray-500">
+              Today (PST): {getTodayPST()}
+            </span>
+            <button
+              onClick={() => setShowForm(true)}
+              className="btn-primary"
+            >
+              Add Expense
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -174,7 +208,7 @@ const Expenses = () => {
                   />
                 </div>
                 <div>
-                  <label className="form-label">Date</label>
+                  <label className="form-label">Date (PST)</label>
                   <input
                     type="date"
                     required
@@ -212,7 +246,7 @@ const Expenses = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
+                    Date (PST)
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Description
@@ -232,7 +266,7 @@ const Expenses = () => {
                 {expenses.map((expense) => (
                   <tr key={expense.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {new Date(expense.date).toLocaleDateString()}
+                      {formatDatePST(expense.date)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {expense.description}
