@@ -134,8 +134,10 @@ def login():
         
         user = User.query.filter_by(username=username).first()
         
-        if not user or not user.check_password(password):
-            return jsonify({'error': 'Invalid username or password'}), 401
+        if not user:
+            return jsonify({'error': 'Username not found', 'error_type': 'invalid_username'}), 401
+        if not user.check_password(password):
+            return jsonify({'error': 'Invalid password', 'error_type': 'invalid_password'}), 401
 
         access_token = create_access_token(identity=str(user.id))
 
@@ -348,21 +350,42 @@ def root():
     return jsonify({
         'message': 'Expense Tracker API',
         'version': '1.0',
+        'description': 'Personal finance management API',
+        'documentation': 'https://github.com/your-username/expense-tracker',
         'endpoints': {
-            'health': '/api/health',
-            'register': '/api/register',
-            'login': '/api/login',
-            'expenses': '/api/expenses'
-        }
+            'health': {
+                'url': '/api/health',
+                'method': 'GET',
+                'description': 'Check API health status'
+            },
+            'register': {
+                'url': '/api/register',
+                'method': 'POST',
+                'description': 'Create new user account'
+            },
+            'login': {
+                'url': '/api/login',
+                'method': 'POST', 
+                'description': 'User authentication'
+            },
+            'expenses': {
+                'url': '/api/expenses',
+                'methods': ['GET', 'POST'],
+                'description': 'Manage expenses (requires authentication)'
+            },
+            'dashboard': {
+                'url': '/api/dashboard/summary',
+                'method': 'GET',
+                'description': 'Get spending analytics (requires authentication)'
+            }
+        },
+        'status': 'operational',
+        'timestamp': datetime.utcnow().isoformat()
     }), 200
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
     return jsonify({'status': 'healthy', 'timestamp': datetime.utcnow().isoformat()}), 200
-
-# Initialize database
-with app.app_context():
-    db.create_all()
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
