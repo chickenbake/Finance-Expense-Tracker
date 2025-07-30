@@ -41,7 +41,7 @@ CORS(app)
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    password_hash = db.Column(db.String(120), nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     expenses = db.relationship('Expense', backref='user', lazy=True, cascade='all, delete-orphan')
 
@@ -337,19 +337,22 @@ def get_dashboard_summary():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/', methods=['GET'])
+def root():
+    return jsonify({
+        'message': 'Expense Tracker API',
+        'version': '1.0',
+        'endpoints': {
+            'health': '/api/health',
+            'register': '/api/register',
+            'login': '/api/login',
+            'expenses': '/api/expenses'
+        }
+    }), 200
+
 @app.route('/api/health', methods=['GET'])
 def health_check():
     return jsonify({'status': 'healthy', 'timestamp': datetime.utcnow().isoformat()}), 200
-
-@app.route('/api/test', methods=['GET'])
-def test_endpoint():
-    return jsonify({'message': 'Backend is working!', 'timestamp': datetime.utcnow().isoformat()}), 200
-
-@app.route('/api/test-no-auth', methods=['POST'])
-def test_no_auth():
-    data = request.get_json()
-    print(f"Test endpoint received: {data}")
-    return jsonify({'message': 'Test successful', 'received': data}), 200
 
 # Initialize database
 with app.app_context():
