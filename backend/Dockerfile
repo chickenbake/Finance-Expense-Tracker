@@ -1,17 +1,17 @@
-FROM python:3.11-slim
+# Create this file: backend/Dockerfile
+FROM python:3.9-slim
 
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies for PostgreSQL
 RUN apt-get update && apt-get install -y \
     gcc \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
 COPY requirements.txt .
-
-# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
@@ -21,8 +21,11 @@ COPY . .
 RUN useradd --create-home --shell /bin/bash app && chown -R app:app /app
 USER app
 
-# Expose port
+# Expose port (Cloud Run uses PORT env variable)
 EXPOSE 8080
 
-# Use Gunicorn for production
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "app:app"]
+# Set default PORT if not provided by Cloud Run
+ENV PORT=8080
+
+# Use gunicorn for production
+CMD exec gunicorn --bind :$PORT --workers 2 --timeout 120 --worker-class sync app:app
