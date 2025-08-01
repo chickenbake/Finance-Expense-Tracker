@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://expense-tracker-backend-f2tivmiqda-uc.a.run.app/api'  // ← Your actual backend URL
+  ? 'https://expense-tracker-backend-f2tivmiqda-uc.a.run.app/api'
   : process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 // Create axios instance
