@@ -8,6 +8,8 @@ import os
 from dotenv import load_dotenv
 from ai_service import ai_analyzer
 
+#TEST
+
 load_dotenv()
 
 app = Flask(__name__)
