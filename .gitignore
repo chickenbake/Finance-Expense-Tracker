@@ -109,4 +109,4 @@ jspm_packages/
 .yarn-integrity
 
 # env.yaml
-.env.yaml
+env.yaml
