@@ -6,3 +6,6 @@ steps:
 
 images:
   - 'gcr.io/$finance-expenses-app/expense-tracker-backend'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
