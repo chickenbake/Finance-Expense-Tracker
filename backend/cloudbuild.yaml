@@ -1,11 +1,11 @@
 steps:
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$finance-expenses-app/expense-tracker-backend', '.']
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/$finance-expenses-app/expense-tracker-backend', '.']
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$finance-expenses-app/expense-tracker-backend']
+    args: ['push', 'us-central1-docker.pkg.dev/$finance-expenses-app/expense-tracker-backend']
 
 images:
-  - 'gcr.io/$finance-expenses-app/expense-tracker-backend'
+  - 'us-central1-docker.pkg.dev/$finance-expenses-app/expense-tracker-backend'
 
 options:
   logging: CLOUD_LOGGING_ONLY
