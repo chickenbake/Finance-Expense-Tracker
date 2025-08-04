@@ -1,48 +1,68 @@
 steps:
 # --- Backend Steps ---
 
-# Step 1: Build the container image
+# Step 1: Build the backend container image
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/expense-tracker-backend:$COMMIT_SHA', '.']
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/finance-expense-tracker-backend:$COMMIT_SHA', './backend']
+  dir: '.'
 
-# Step 2: Push the container image to Artifact Registry
+# Step 2: Push the backend container image to Artifact Registry
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/expense-tracker-backend:$COMMIT_SHA']
+  args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/finance-expense-tracker-backend:$COMMIT_SHA']
 
-# Step 3: Deploy the image to Cloud Run
+# Step 3: Deploy the backend to Cloud Run
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   entrypoint: gcloud
   args:
     - 'run'
     - 'deploy'
-    - 'expense-tracker-backend' # This is your Cloud Run service name
-    - '--image=us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/expense-tracker-backend:$COMMIT_SHA'
+    - 'finance-expense-tracker' # Updated service name
+    - '--image=us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/finance-expense-tracker-backend:$COMMIT_SHA'
     - '--region=us-central1'
     - '--platform=managed'
     - '--allow-unauthenticated'
     - '--add-cloudsql-instances=finance-expenses-app:us-central1:expense-tracker-db'
-    # Securely mount secrets as environment variables
-    - '--update-secrets=DB_PASS=db-pass-secret:latest,SECRET_KEY=flask-secret-key:latest,JWT_SECRET_KEY=jwt-secret-key:latest,HUGGING_FACE_TOKEN=hf-token-secret:latest'
-    # Set non-sensitive environment variables
-    - '--set-env-vars=DB_USER=postgres,DB_NAME=expense_tracker'
+    # Set environment variables (you'll need to set secrets in Cloud Run console manually)
+    - '--set-env-vars=DB_USER=postgres,DB_NAME=expense_tracker,CLOUD_SQL_CONNECTION_NAME=finance-expenses-app:us-central1:expense-tracker-db'
+    # NOTE: Set SECRET_KEY, JWT_SECRET_KEY, HUGGING_FACE_TOKEN, and DB_PASS manually in Cloud Run console
 
 # --- Frontend Steps ---
 
-# 4. Install frontend dependencies
+# Step 4: Install frontend dependencies
 - name: 'gcr.io/cloud-builders/npm'
-  dir: 'frontend' # Run this command in the 'frontend' directory
+  dir: 'frontend'
   args: ['install']
 
-# 5. Build the frontend static files
+# Step 5: Build the frontend static files with production API URL
 - name: 'gcr.io/cloud-builders/npm'
   dir: 'frontend'
+  env:
+    - 'NODE_ENV=production'
   args: ['run', 'build']
 
-# 6. Deploy the frontend to Firebase Hosting
-- name: 'gcr.io/cloud-builders/npm'
-  dir: 'frontend'
-  args: ['run', 'deploy']
+# Step 6: Build frontend container image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/finance-expense-tracker-frontend:$COMMIT_SHA', './frontend']
+  dir: '.'
 
-# Store the image in Artifact Registry
+# Step 7: Push frontend container image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/finance-expense-tracker-frontend:$COMMIT_SHA']
+
+# Step 8: Deploy frontend to Cloud Run
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: gcloud
+  args:
+    - 'run'
+    - 'deploy'
+    - 'finance-expense-tracker-frontend'
+    - '--image=us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/finance-expense-tracker-frontend:$COMMIT_SHA'
+    - '--region=us-central1'
+    - '--platform=managed'
+    - '--allow-unauthenticated'
+    - '--port=8080'
+
+# Store the images in Artifact Registry
 images:
-- 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/expense-tracker-backend:$COMMIT_SHA'
+- 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/finance-expense-tracker-backend:$COMMIT_SHA'
+- 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/finance-expense-tracker-frontend:$COMMIT_SHA'

@@ -44,7 +44,17 @@ app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=24)
 # Initialize extensions
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
-CORS(app)
+
+# Configure CORS for production and development
+if os.getenv('FLASK_ENV') == 'production':
+    # Production: Allow your frontend domain
+    CORS(app, origins=[
+        "https://your-frontend-domain.com",  # Replace with your actual frontend URL
+        "http://localhost:3000"  # Keep for local development
+    ])
+else:
+    # Development: Allow all origins
+    CORS(app)
 
 # Models
 class User(db.Model):

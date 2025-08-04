@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://expense-tracker-backend-f2tivmiqda-uc.a.run.app/api'
+  ? 'https://finance-expense-tracker-467666307950.us-central1.run.app/api'
   : process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 // Create axios instance
@@ -105,6 +105,16 @@ export const expenseService = {
 
   getDashboardSummary: async () => {
     const response = await api.get('/dashboard/summary');
+    return response.data;
+  },
+
+  categorizeExpense: async (description) => {
+    const response = await api.post('/expenses/categorize', { description });
+    return response.data;
+  },
+
+  getAIInsights: async () => {
+    const response = await api.get('/insights');
     return response.data;
   },
 };

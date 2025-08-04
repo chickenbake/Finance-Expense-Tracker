@@ -1,197 +1,243 @@
-# Personal Expense Tracker
+# 💰 Finance Expense Tracker
 
-A full-stack web application for tracking personal expenses with data visualization features.
+A full-stack expense tracking application with AI-powered categorization, built with React and Flask, deployed on Google Cloud Platform.
 
-## Features
+## 🚀 Live Demo
 
-### Core Features
-- **User Authentication**: Register, login, and logout functionality
-- **Expense Management**: Add, edit, delete, and view expenses
-- **Data Visualization**: 
-  - Pie chart showing spending breakdown by category (current month)
-  - Bar chart showing daily spending for the last 30 days
-- **Responsive Design**: Works on desktop and mobile devices
+- **Backend API**: https://finance-expense-tracker-467666307950.us-central1.run.app
+- **Frontend**: https://finance-expense-tracker-frontend-467666307950.us-central1.run.app
 
-### Technical Stack
-- **Frontend**: React.js with Tailwind CSS
-- **Backend**: Python Flask with SQLAlchemy
-- **Database**: SQLite (easily upgradeable to PostgreSQL)
-- **Charts**: Chart.js with react-chartjs-2
-- **Authentication**: JWT tokens
+## ✨ Features
 
-## Project Structure
+- **User Authentication**: Secure login/register with JWT tokens
+- **Expense Management**: Add, edit, delete, and categorize expenses
+- **AI-Powered Categorization**: Automatic expense categorization using Hugging Face models
+- **Dashboard Analytics**: Visual charts and spending insights
+- **Responsive Design**: Works on desktop and mobile
+- **Cloud Deployment**: Deployed on Google Cloud Run with Cloud SQL
 
-```
-Finance Expense Tracker/
-├── backend/
-│   ├── app.py              # Main Flask application
-│   ├── requirements.txt    # Python dependencies
-│   └── .env               # Environment variables
-├── frontend/
-│   ├── public/
-│   ├── src/
-│   │   ├── components/    # Reusable React components
-│   │   ├── contexts/      # React context providers
-│   │   ├── pages/         # Main page components
-│   │   ├── services/      # API service functions
-│   │   └── App.js         # Main React component
-│   ├── package.json       # Node.js dependencies
-│   └── tailwind.config.js # Tailwind CSS configuration
-└── README.md              # This file
-```
+## 🛠️ Tech Stack
 
-## Getting Started
+### Backend
+- **Flask** - Python web framework
+- **SQLAlchemy** - ORM for database management
+- **JWT** - Authentication and authorization
+- **PostgreSQL** - Production database (Cloud SQL)
+- **SQLite** - Local development database
+- **Hugging Face API** - AI-powered expense categorization
 
-### Prerequisites
-- Python 3.8 or higher
-- Node.js 14 or higher
-- npm or yarn
+### Frontend
+- **React** - Frontend framework
+- **Chart.js** - Data visualization
+- **Tailwind CSS** - Styling
+- **Axios** - HTTP client
 
-### Backend Setup
+### Infrastructure
+- **Google Cloud Run** - Serverless deployment
+- **Google Cloud SQL** - Managed PostgreSQL database
+- **Google Cloud Build** - CI/CD pipeline
+- **Artifact Registry** - Container image storage
 
-1. Navigate to the backend directory:
+## 🏃‍♂️ Quick Start
+
+### Local Development
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/chickenbake/Finance-Expense-Tracker.git
+   cd Finance-Expense-Tracker
+   ```
+
+2. **Backend Setup**
    ```bash
    cd backend
-   ```
-
-2. Create a virtual environment:
-   ```bash
-   python -m venv venv
-   ```
-
-3. Activate the virtual environment:
-   - Windows: `venv\Scripts\activate`
-   - macOS/Linux: `source venv/bin/activate`
-
-4. Install dependencies:
-   ```bash
    pip install -r requirements.txt
-   ```
-
-5. Set up environment variables (optional - defaults will work for development):
-   ```bash
-   # Edit .env file with your preferred values
-   SECRET_KEY=your-super-secret-key
-   JWT_SECRET_KEY=your-jwt-secret-key
-   DATABASE_URL=sqlite:///expense_tracker.db
-   ```
-
-6. Run the Flask application:
-   ```bash
+   
+   # Copy environment template and update with your values
+   cp .env.production.template .env
+   # Edit .env with your local settings
+   
    python app.py
    ```
 
-The backend will be available at `http://localhost:5000`
-
-### Frontend Setup
-
-1. Navigate to the frontend directory:
+3. **Frontend Setup**
    ```bash
    cd frontend
-   ```
-
-2. Install dependencies:
-   ```bash
    npm install
-   ```
-
-3. Start the development server:
-   ```bash
    npm start
    ```
 
-The frontend will be available at `http://localhost:3000`
+4. **Or use the convenience script**
+   ```bash
+   # On Windows
+   start-local-dev.bat
+   ```
 
-## API Endpoints
+### Access Points
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:5000
 
-### Authentication
-- `POST /api/register` - Create a new user account
-- `POST /api/login` - Login with username and password
+## 🚀 Production Deployment
 
-### Expenses
-- `GET /api/expenses` - Get all expenses for the logged-in user
-- `POST /api/expenses` - Add a new expense
-- `PUT /api/expenses/<id>` - Update an existing expense
-- `DELETE /api/expenses/<id>` - Delete an expense
+### Prerequisites
+- Google Cloud account with billing enabled
+- `gcloud` CLI installed and authenticated
+- Docker installed (for local testing)
 
-### Dashboard
-- `GET /api/dashboard/summary` - Get dashboard data for charts
+### Environment Setup
 
-## Usage
+1. **Set up environment variables in Cloud Run console:**
+   - `SECRET_KEY` - Flask secret key
+   - `JWT_SECRET_KEY` - JWT signing key
+   - `HUGGING_FACE_TOKEN` - Your Hugging Face API token
+   - `DB_USER` - Database username (postgres)
+   - `DB_PASS` - Database password
+   - `DB_NAME` - Database name (expense_tracker)
+   - `CLOUD_SQL_CONNECTION_NAME` - Your Cloud SQL instance connection name
 
-1. **Register**: Create a new account with a username and password
-2. **Login**: Sign in with your credentials
-3. **Add Expenses**: Use the "Add Expense" button to record new expenses
-4. **View Dashboard**: See your spending patterns with interactive charts
-5. **Manage Expenses**: Edit or delete existing expenses from the Expenses page
+### Automated Deployment (Recommended)
 
-## Expense Categories
+The project uses Cloud Build triggers for automatic deployment:
 
-The application supports the following expense categories:
-- Food
-- Transport
-- Entertainment
-- Shopping
-- Bills
-- Healthcare
-- Education
-- Travel
-- Other
+1. **Push to main branch** triggers automatic build and deployment
+2. **Manual deployment** using batch scripts:
+   ```bash
+   # Deploy backend
+   deploy-backend.bat
+   
+   # Deploy frontend
+   deploy-frontend.bat
+   ```
 
-## Development Roadmap
+### Manual Deployment
 
-### Phase 1: ✅ Core Features Completed
-- User authentication
-- Basic expense CRUD operations
-- Data visualization
-- Responsive UI
+```bash
+# Backend
+cd backend
+gcloud builds submit --tag us-central1-docker.pkg.dev/finance-expenses-app/cloud-run-source-deploy/finance-expense-tracker-backend
+gcloud run deploy finance-expense-tracker --image us-central1-docker.pkg.dev/finance-expenses-app/cloud-run-source-deploy/finance-expense-tracker-backend --region us-central1
 
-### Phase 2: Planned Enhancements
-- Monthly budgets and budget tracking
-- Search and filter functionality
-- Export data to CSV
-- Recurring expenses
+# Frontend
+cd frontend
+gcloud builds submit --tag us-central1-docker.pkg.dev/finance-expenses-app/cloud-run-source-deploy/finance-expense-tracker-frontend
+gcloud run deploy finance-expense-tracker-frontend --image us-central1-docker.pkg.dev/finance-expenses-app/cloud-run-source-deploy/finance-expense-tracker-frontend --region us-central1
+```
 
-### Phase 3: Advanced Features
-- File upload for receipts
-- Multiple currencies support
-- Expense categories customization
-- Email notifications
+## 📁 Project Structure
 
-## Deployment
+```
+Finance-Expense-Tracker/
+├── backend/                    # Flask API
+│   ├── app.py                 # Main application file
+│   ├── ai_service.py          # AI categorization service
+│   ├── requirements.txt       # Python dependencies
+│   ├── Dockerfile            # Backend container config
+│   └── .env                  # Environment variables (local)
+├── frontend/                  # React application
+│   ├── src/
+│   │   ├── components/       # React components
+│   │   ├── pages/           # Page components
+│   │   ├── contexts/        # React contexts
+│   │   └── services/        # API services
+│   ├── public/              # Static assets
+│   ├── package.json         # Node.js dependencies
+│   ├── Dockerfile          # Frontend container config
+│   └── nginx.conf          # Nginx configuration
+├── cloudbuild.yaml         # Cloud Build configuration
+├── deploy-backend.bat      # Backend deployment script
+├── deploy-frontend.bat     # Frontend deployment script
+├── start-local-dev.bat    # Local development setup
+└── README.md              # This file
+```
 
-### Backend Deployment
-The Flask backend can be deployed to platforms like:
-- Heroku
-- Render
-- DigitalOcean App Platform
-- AWS Elastic Beanstalk
+## 🔧 Configuration
 
-### Frontend Deployment
-The React frontend can be deployed to:
-- Vercel
-- Netlify
-- GitHub Pages
-- AWS S3 + CloudFront
+### Environment Variables
 
-### Database
-For production, consider upgrading from SQLite to:
-- PostgreSQL (recommended)
-- MySQL
-- MongoDB
+#### Local Development (.env)
+```env
+SECRET_KEY=your_local_secret_key
+JWT_SECRET_KEY=your_local_jwt_secret
+HUGGING_FACE_TOKEN=your_hf_token
+DATABASE_URL=sqlite:///expense_tracker.db
+```
 
-## Contributing
+#### Production (Cloud Run)
+```env
+SECRET_KEY=your_production_secret_key
+JWT_SECRET_KEY=your_production_jwt_secret
+HUGGING_FACE_TOKEN=your_hf_token
+DB_USER=postgres
+DB_PASS=your_db_password
+DB_NAME=expense_tracker
+CLOUD_SQL_CONNECTION_NAME=your_instance_connection_name
+```
+
+## 🤖 AI Features
+
+The application uses Hugging Face's BART model for intelligent expense categorization:
+- Automatically categorizes expenses into predefined categories
+- Fallback to keyword-based categorization when AI is unavailable
+- Provides spending insights and recommendations
+
+## 🛡️ Security
+
+- JWT-based authentication
+- Password hashing with Werkzeug
+- CORS configuration for cross-origin requests
+- Environment-based secret management
+- Non-root user in Docker containers
+
+## 📊 API Documentation
+
+### Authentication Endpoints
+- `POST /api/register` - User registration
+- `POST /api/login` - User login
+
+### Expense Endpoints
+- `GET /api/expenses` - Get user expenses
+- `POST /api/expenses` - Add new expense
+- `PUT /api/expenses/{id}` - Update expense
+- `DELETE /api/expenses/{id}` - Delete expense
+- `POST /api/expenses/categorize` - AI categorization
+
+### Dashboard Endpoints
+- `GET /api/dashboard/summary` - Dashboard statistics
+- `GET /api/insights` - AI spending insights
+
+## 🚨 Troubleshooting
+
+### Common Issues
+
+1. **AI categorization not working**
+   - Ensure `HUGGING_FACE_TOKEN` is set in Cloud Run
+   - Check Cloud Run logs for API errors
+
+2. **Database connection errors**
+   - Verify Cloud SQL instance is running
+   - Check connection string and credentials
+   - Ensure Cloud SQL proxy is configured
+
+3. **Build failures**
+   - Check Dockerfile paths are correct
+   - Verify all required files are present
+   - Review Cloud Build logs
+
+## 📝 License
+
+This project is licensed under the MIT License.
+
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Add tests if applicable
+4. Test locally
 5. Submit a pull request
 
-## License
+## 📞 Support
 
-This project is open source and available under the [MIT License](LICENSE).
-
-## Support
-
-For questions or issues, please create an issue in the repository or contact the development team.
+For issues and questions:
+- Create an issue in the GitHub repository
+- Check the troubleshooting section above
+- Review Cloud Build and Cloud Run logs

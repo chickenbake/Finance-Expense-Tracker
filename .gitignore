@@ -108,5 +108,5 @@ jspm_packages/
 # Yarn Integrity file
 .yarn-integrity
 
-# env.yaml
-env.yaml
+# DEPLOYMENT-GUIDE.md
+DEPLOYMENT-GUIDE.md

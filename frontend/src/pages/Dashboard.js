@@ -51,18 +51,14 @@ const Dashboard = () => {
   const fetchAIInsights = async () => {
     try {
       setLoadingInsights(true);
-      const response = await fetch('http://localhost:5000/api/insights', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
       
-      if (response.ok) {
-        const data = await response.json();
-        setAiInsights(data.insights);
-      }
+      // Use the centralized API service
+      const data = await expenseService.getAIInsights();
+      setAiInsights(data.insights);
+      
     } catch (error) {
       console.error('Failed to fetch AI insights:', error);
+      setAiInsights('Unable to load AI insights at this time.');
     } finally {
       setLoadingInsights(false);
     }

@@ -1,4 +1,4 @@
-# Create this file: frontend/Dockerfile
+# Frontend Dockerfile for Finance Expense Tracker
 # Build stage
 FROM node:18-alpine AS build
 
@@ -13,7 +13,8 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Build the app
+# Build the app for production
+ENV NODE_ENV=production
 RUN npm run build
 
 # Production stage
@@ -23,9 +24,9 @@ FROM nginx:alpine
 COPY --from=build /app/build /usr/share/nginx/html
 
 # Copy nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose port 8080 (Cloud Run requirement)
+# Expose port 8080
 EXPOSE 8080
 
 CMD ["nginx", "-g", "daemon off;"]

@@ -145,39 +145,27 @@ const Expenses = () => {
     if (description.length >= 3) {
       setLoadingCategory(true);
       try {
-        console.log('🔍 Sending to AI:', description); // Debug
+        console.log('🔍 Sending to AI:', description);
         
-        const response = await fetch('http://localhost:5000/api/expenses/categorize', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
-          body: JSON.stringify({ description })
-        });
+        // Use the centralized API service
+        const data = await expenseService.categorizeExpense(description);
+        console.log('🎯 AI Response:', data);
+        setSuggestedCategory(data.suggested_category);
         
-        if (response.ok) {
-          const data = await response.json();
-          console.log('🎯 AI Response:', data); // Debug
-          setSuggestedCategory(data.suggested_category);
-          
-          // ALWAYS auto-fill category with latest AI suggestion
-          console.log('✅ Auto-updating category to:', data.suggested_category); // Debug
-          setFormData(prev => ({ 
-            ...prev, 
-            category: data.suggested_category 
-          }));
-          
-        } else {
-          console.error('❌ API Error:', response.status);
-        }
+        // Auto-fill category with AI suggestion
+        console.log('✅ Auto-updating category to:', data.suggested_category);
+        setFormData(prev => ({ 
+          ...prev, 
+          category: data.suggested_category 
+        }));
+        
       } catch (error) {
-        console.error('❌ Request failed:', error);
+        console.error('❌ AI categorization failed:', error);
       } finally {
         setLoadingCategory(false);
       }
     } else {
-      // Clear suggestions and reset category for short descriptions
+      // Clear suggestions for short descriptions
       setSuggestedCategory('');
       setFormData(prev => ({ ...prev, category: '' }));
     }
