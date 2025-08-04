@@ -21,7 +21,10 @@ steps:
     - '--platform=managed'
     - '--allow-unauthenticated'
     - '--add-cloudsql-instances=finance-expenses-app:us-central1:expense-tracker-db'
-    - '--update-secrets=DB_PASS=chickenbake:latest'
+    # Securely mount secrets as environment variables
+    - '--update-secrets=DB_PASS=db-pass-secret:latest,SECRET_KEY=flask-secret-key:latest,JWT_SECRET_KEY=jwt-secret-key:latest,HUGGING_FACE_TOKEN=hf-token-secret:latest'
+    # Set non-sensitive environment variables
+    - '--set-env-vars=DB_USER=postgres,DB_NAME=expense_tracker'
 
 # --- Frontend Steps ---
 
