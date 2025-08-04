@@ -1,13 +1,13 @@
-  # --- Backend Steps ---
-
 steps:
+# --- Backend Steps ---
+
 # Step 1: Build the container image
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'us-central1-docker.pkg.dev/$finance-expenses-app/expense-tracker-docker-repo/expense-tracker-backend:$COMMIT_SHA', '.']
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/expense-tracker-backend:$COMMIT_SHA', '.']
 
 # Step 2: Push the container image to Artifact Registry
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'us-central1-docker.pkg.dev/$finance-expenses-app/expense-tracker-docker-repo/expense-tracker-backend:$COMMIT_SHA']
+  args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/expense-tracker-backend:$COMMIT_SHA']
 
 # Step 3: Deploy the image to Cloud Run
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -15,15 +15,15 @@ steps:
   args:
     - 'run'
     - 'deploy'
-    - 'expense-tracker-backend'
-    - '--image=us-central1-docker.pkg.dev/$finance-expenses-app/expense-tracker-docker-repo/expense-tracker-backend:$COMMIT_SHA'
+    - 'expense-tracker-backend' # This is your Cloud Run service name
+    - '--image=us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/expense-tracker-backend:$COMMIT_SHA'
     - '--region=us-central1'
     - '--platform=managed'
     - '--allow-unauthenticated'
     - '--add-cloudsql-instances=finance-expenses-app:us-central1:expense-tracker-db'
     - '--update-secrets=DB_PASS=chickenbake:latest'
 
-  # --- Frontend Steps ---
+# --- Frontend Steps ---
 
 # 4. Install frontend dependencies
 - name: 'gcr.io/cloud-builders/npm'
@@ -42,4 +42,4 @@ steps:
 
 # Store the image in Artifact Registry
 images:
-- 'us-central1-docker.pkg.dev/$finance-expenses-app/expense-tracker-docker-repo/expense-tracker-backend:$COMMIT_SHA'
+- 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/expense-tracker-backend:$COMMIT_SHA'
