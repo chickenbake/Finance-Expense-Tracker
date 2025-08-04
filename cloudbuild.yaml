@@ -66,3 +66,7 @@ steps:
 images:
 - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/finance-expense-tracker-backend:$COMMIT_SHA'
 - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/finance-expense-tracker-frontend:$COMMIT_SHA'
+
+# Required when using a custom service account
+options:
+  logging: CLOUD_LOGGING_ONLY
