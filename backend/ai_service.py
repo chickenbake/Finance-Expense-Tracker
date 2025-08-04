@@ -7,6 +7,8 @@ load_dotenv()
 class AIExpenseAnalyzer:
     def __init__(self):
         self.hf_token = os.getenv('HUGGING_FACE_TOKEN')
+        if self.hf_token:
+            self.hf_token = self.hf_token.strip()  # Remove any whitespace/newlines
         # Updated API URL to match the working sample
         self.api_url = "https://api-inference.huggingface.co/models/facebook/bart-large-mnli"
         print(f"HF Token exists: {bool(self.hf_token)}")  # Debug line
