@@ -28,4 +28,4 @@ EXPOSE 8080
 ENV PORT=8080
 
 # Use gunicorn for production
-CMD exec gunicorn --bind :$PORT --workers 2 --timeout 120 --worker-class sync app:app
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app:app"]

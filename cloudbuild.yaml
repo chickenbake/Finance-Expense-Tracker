@@ -1,0 +1,45 @@
+  # --- Backend Steps ---
+
+steps:
+# Step 1: Build the container image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/$finance-expenses-app/expense-tracker-docker-repo/expense-tracker-backend:$COMMIT_SHA', '.']
+
+# Step 2: Push the container image to Artifact Registry
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'us-central1-docker.pkg.dev/$finance-expenses-app/expense-tracker-docker-repo/expense-tracker-backend:$COMMIT_SHA']
+
+# Step 3: Deploy the image to Cloud Run
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: gcloud
+  args:
+    - 'run'
+    - 'deploy'
+    - 'expense-tracker-backend'
+    - '--image=us-central1-docker.pkg.dev/$finance-expenses-app/expense-tracker-docker-repo/expense-tracker-backend:$COMMIT_SHA'
+    - '--region=us-central1'
+    - '--platform=managed'
+    - '--allow-unauthenticated'
+    - '--add-cloudsql-instances=finance-expenses-app:us-central1:expense-tracker-db'
+    - '--update-secrets=DB_PASS=chickenbake:latest'
+
+  # --- Frontend Steps ---
+
+# 4. Install frontend dependencies
+- name: 'gcr.io/cloud-builders/npm'
+  dir: 'frontend' # Run this command in the 'frontend' directory
+  args: ['install']
+
+# 5. Build the frontend static files
+- name: 'gcr.io/cloud-builders/npm'
+  dir: 'frontend'
+  args: ['run', 'build']
+
+# 6. Deploy the frontend to Firebase Hosting
+- name: 'gcr.io/cloud-builders/npm'
+  dir: 'frontend'
+  args: ['run', 'deploy']
+
+# Store the image in Artifact Registry
+images:
+- 'us-central1-docker.pkg.dev/$finance-expenses-app/expense-tracker-docker-repo/expense-tracker-backend:$COMMIT_SHA'
