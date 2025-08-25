@@ -23,13 +23,16 @@ const Expenses = () => {
   };
 
   const [formData, setFormData] = useState({
+    merchant: '',
     amount: '',
     description: '',
     category: '',
-    date: getTodayPST(), // Use PST date
+    payment_method: '',
+    date: getTodayPST(),
   });
   const [suggestedCategory, setSuggestedCategory] = useState('');
   const [loadingCategory, setLoadingCategory] = useState(false);
+  const [expandedDescription, setExpandedDescription] = useState(null);
 
   const categories = [
     'Food and Dining',
@@ -40,6 +43,7 @@ const Expenses = () => {
     'Healthcare',
     'Education',
     'Travel',
+    'Savings',
     'Other',
   ];
 
@@ -64,10 +68,6 @@ const Expenses = () => {
     e.preventDefault();
     setError('');
 
-    // Add debugging for timezone
-    console.log('Current PST date:', getTodayPST());
-    console.log('Form date being sent:', formData.date);
-
     try {
       if (editingExpense) {
         await expenseService.updateExpense(editingExpense.id, formData);
@@ -76,10 +76,12 @@ const Expenses = () => {
       }
       
       setFormData({
+        merchant: '',
         amount: '',
         description: '',
         category: '',
-        date: getTodayPST(), // Reset to PST date
+        payment_method: '',
+        date: getTodayPST(),
       });
       setShowForm(false);
       setEditingExpense(null);
@@ -95,9 +97,11 @@ const Expenses = () => {
   const handleEdit = (expense) => {
     setEditingExpense(expense);
     setFormData({
+      merchant: expense.merchant || '',
       amount: expense.amount.toString(),
       description: expense.description,
       category: expense.category,
+      payment_method: expense.payment_method || '',
       date: expense.date,
     });
     setShowForm(true);
@@ -118,11 +122,20 @@ const Expenses = () => {
     setShowForm(false);
     setEditingExpense(null);
     setFormData({
+      merchant: '',
       amount: '',
       description: '',
       category: '',
+      payment_method: '',
       date: getTodayPST(), // Reset to PST date
     });
+  };
+
+  // Helper function to truncate text with expand option
+  const truncateText = (text, maxLength = 50) => {
+    if (!text) return '';
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
   };
 
   // Helper function to format dates in PST for display
@@ -145,27 +158,39 @@ const Expenses = () => {
     if (description.length >= 3) {
       setLoadingCategory(true);
       try {
-        console.log('🔍 Sending to AI:', description);
+        console.log('🔍 Sending to AI:', description); // Debug
         
-        // Use the centralized API service
-        const data = await expenseService.categorizeExpense(description);
-        console.log('🎯 AI Response:', data);
-        setSuggestedCategory(data.suggested_category);
+        const response = await fetch('https://finance-expense-tracker-467666307950.us-central1.run.app/api/expenses/categorize', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({ description })
+        });
         
-        // Auto-fill category with AI suggestion
-        console.log('✅ Auto-updating category to:', data.suggested_category);
-        setFormData(prev => ({ 
-          ...prev, 
-          category: data.suggested_category 
-        }));
-        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('🎯 AI Response:', data); // Debug
+          setSuggestedCategory(data.suggested_category);
+          
+          // ALWAYS auto-fill category with latest AI suggestion
+          console.log('✅ Auto-updating category to:', data.suggested_category); // Debug
+          setFormData(prev => ({ 
+            ...prev, 
+            category: data.suggested_category 
+          }));
+          
+        } else {
+          console.error('❌ API Error:', response.status);
+        }
       } catch (error) {
-        console.error('❌ AI categorization failed:', error);
+        console.error('❌ Request failed:', error);
       } finally {
         setLoadingCategory(false);
       }
     } else {
-      // Clear suggestions for short descriptions
+      // Clear suggestions and reset category for short descriptions
       setSuggestedCategory('');
       setFormData(prev => ({ ...prev, category: '' }));
     }
@@ -204,6 +229,43 @@ const Expenses = () => {
             </h2>
             <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <div>
+                  <label className="form-label">Merchant</label>
+                  <input
+                    type="text"
+                    required
+                    className="form-input"
+                    value={formData.merchant}
+                    onChange={(e) => setFormData({ ...formData, merchant: e.target.value })}
+                    placeholder="e.g., Starbucks"
+                  />  
+                </div>
+
+                <div>
+                  <label className="form-label">Description</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      required
+                      className="form-input"
+                      value={formData.description}
+                      onChange={(e) => handleDescriptionChange(e.target.value)}
+                      placeholder="e.g., Coffee"
+                    />
+                    {loadingCategory && (
+                      <div className="absolute right-2 top-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                      </div>
+                    )}
+                  </div>
+                  {suggestedCategory && (
+                    <p className="text-sm text-blue-600 mt-1">
+                      💡 AI suggested: {suggestedCategory}
+                    </p>
+                  )}
+                </div>
+
                 <div>
                   <label className="form-label">Amount</label>
                   <input
@@ -218,7 +280,6 @@ const Expenses = () => {
                   />
                 </div>
                 
-                {/* Category moved to top right */}
                 <div>
                   <label className="form-label">Category</label>
                   <select
@@ -236,29 +297,16 @@ const Expenses = () => {
                   </select>
                 </div>
 
-                {/* Description moved to bottom left */}
                 <div>
-                  <label className="form-label">Description</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      required
-                      className="form-input"
-                      value={formData.description}
-                      onChange={(e) => handleDescriptionChange(e.target.value)}
-                      placeholder="e.g., Starbucks coffee"
-                    />
-                    {loadingCategory && (
-                      <div className="absolute right-2 top-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                      </div>
-                    )}
-                  </div>
-                  {suggestedCategory && (
-                    <p className="text-sm text-blue-600 mt-1">
-                      💡 AI suggested: {suggestedCategory}
-                    </p>
-                  )}
+                  <label className="form-label">Payment Method</label>
+                  <input
+                    type="text"
+                    required
+                    className="form-input"
+                    value={formData.payment_method}
+                    onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
+                    placeholder="e.g., Chase Credit Card ending in 0000"
+                  />  
                 </div>
 
                 <div>
@@ -296,34 +344,70 @@ const Expenses = () => {
           </div>
         ) : (
           <div className="bg-white shadow rounded-lg overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date (PST)
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Description
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Category
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Amount
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                      Date (PST)
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                      Merchant
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
+                      Description
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                      Category
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
+                      Amount
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                      Payment Method
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {expenses.map((expense) => (
                   <tr key={expense.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {formatDatePST(expense.date)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {expense.description}
+                    <td className="px-6 py-4 text-sm text-gray-900 max-w-xs">
+                      <div className="flex items-center">
+                        <span 
+                          className={`truncate ${expense.merchant && expense.merchant.length > 30 ? 'cursor-pointer' : ''}`}
+                          onClick={() => expense.merchant && expense.merchant.length > 30 && setExpandedDescription(expandedDescription === `merchant-${expense.id}` ? null : `merchant-${expense.id}`)}
+                          title={expense.merchant && expense.merchant.length > 30 ? "Click to expand" : ""}
+                        >
+                          {truncateText(expense.merchant, 30)}
+                        </span>
+                      </div>
+                      {expandedDescription === `merchant-${expense.id}` && (
+                        <div className="mt-2 p-2 bg-gray-50 border rounded text-xs max-w-xs break-words">
+                          {expense.merchant}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900 max-w-xs">
+                      <div className="flex items-center">
+                        <span 
+                          className={`truncate ${expense.description && expense.description.length > 40 ? 'cursor-pointer' : ''}`}
+                          onClick={() => expense.description && expense.description.length > 40 && setExpandedDescription(expandedDescription === `desc-${expense.id}` ? null : `desc-${expense.id}`)}
+                          title={expense.description && expense.description.length > 40 ? "Click to expand" : ""}
+                        >
+                          {truncateText(expense.description, 40)}
+                        </span>
+                      </div>
+                      {expandedDescription === `desc-${expense.id}` && (
+                        <div className="mt-2 p-2 bg-gray-50 border rounded text-xs max-w-xs break-words">
+                          {expense.description}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
@@ -332,6 +416,9 @@ const Expenses = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       ${expense.amount.toFixed(2)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {expense.payment_method}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
@@ -351,6 +438,7 @@ const Expenses = () => {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </div>

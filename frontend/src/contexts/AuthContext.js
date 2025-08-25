@@ -58,7 +58,6 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      dispatch({ type: 'SET_LOADING', payload: true });
       const response = await authService.login(username, password);
       dispatch({
         type: 'LOGIN_SUCCESS',
@@ -75,7 +74,6 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (username, password) => {
     try {
-      dispatch({ type: 'SET_LOADING', payload: true });
       const response = await authService.register(username, password);
       dispatch({
         type: 'LOGIN_SUCCESS',

@@ -3,12 +3,13 @@ echo Setting up Finance Expense Tracker for Local Development...
 
 echo.
 echo Starting Backend (Flask API)...
-cd "c:\Finance Expense Tracker\backend"
+cd "C:\Users\sol46ex\Porsche Projects\Finance Expense Tracker\backend"
+call venv\Scripts\activate
 start cmd /k "python app.py"
 
 echo.
 echo Starting Frontend (React Development Server)...
-cd "c:\Finance Expense Tracker\frontend"
+cd "C:\Users\sol46ex\Porsche Projects\Finance Expense Tracker\frontend"
 start cmd /k "npm start"
 
 echo.

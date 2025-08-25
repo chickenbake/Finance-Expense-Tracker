@@ -51,14 +51,18 @@ const Dashboard = () => {
   const fetchAIInsights = async () => {
     try {
       setLoadingInsights(true);
+      const response = await fetch('https://finance-expense-tracker-467666307950.us-central1.run.app/api', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
       
-      // Use the centralized API service
-      const data = await expenseService.getAIInsights();
-      setAiInsights(data.insights);
-      
+      if (response.ok) {
+        const data = await response.json();
+        setAiInsights(data.insights);
+      }
     } catch (error) {
       console.error('Failed to fetch AI insights:', error);
-      setAiInsights('Unable to load AI insights at this time.');
     } finally {
       setLoadingInsights(false);
     }

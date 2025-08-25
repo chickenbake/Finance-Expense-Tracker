@@ -16,7 +16,7 @@ class AIExpenseAnalyzer:
     def categorize_expense(self, description):
         """Categorize expense using Hugging Face API"""
         print(f"Categorizing: '{description}'")  # Debug line
-        
+
         if not self.hf_token:
             print("No HF token, using fallback")  # Debug line
             return self._fallback_categorization(description)
@@ -28,7 +28,7 @@ class AIExpenseAnalyzer:
         candidate_labels = [
             "Food and Dining", "Transportation", "Entertainment", 
             "Shopping", "Bills and Utilities", "Healthcare", 
-            "Education", "Travel", "Other"
+            "Education", "Travel", "Savings", "Other"
         ]
         
         # Enhanced input with more context for better categorization

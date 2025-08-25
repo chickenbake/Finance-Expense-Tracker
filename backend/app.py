@@ -6,7 +6,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 import os
 from dotenv import load_dotenv
-from ai_service import ai_analyzer
+from ai_categorization import ai_analyzer
+from flask_migrate import Migrate
 
 # TEST
 
@@ -44,17 +45,8 @@ app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=24)
 # Initialize extensions
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
-
-# Configure CORS for production and development
-if os.getenv('FLASK_ENV') == 'production':
-    # Production: Allow your frontend domain
-    CORS(app, origins=[
-        "https://your-frontend-domain.com",  # Replace with your actual frontend URL
-        "http://localhost:3000"  # Keep for local development
-    ])
-else:
-    # Development: Allow all origins
-    CORS(app)
+CORS(app)
+migrate = Migrate(app, db)
 
 # Models
 class User(db.Model):
@@ -79,9 +71,11 @@ class User(db.Model):
 
 class Expense(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    merchant = db.Column(db.String(100), nullable=False)
     amount = db.Column(db.Float, nullable=False)
-    description = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.String(300), nullable=False)
     category = db.Column(db.String(50), nullable=False)
+    payment_method = db.Column(db.String(100), nullable=False)
     date = db.Column(db.Date, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -89,9 +83,11 @@ class Expense(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
+            'merchant': self.merchant,
             'amount': self.amount,
             'description': self.description,
             'category': self.category,
+            'payment_method': self.payment_method,
             'date': self.date.isoformat(),
             'created_at': self.created_at.isoformat(),
             'user_id': self.user_id
@@ -168,7 +164,7 @@ def login():
 def get_expenses():
     try:
         user_id = int(get_jwt_identity())
-        expenses = Expense.query.filter_by(user_id=user_id).order_by(Expense.date.desc()).all()
+        expenses = Expense.query.filter_by(user_id=user_id).order_by(Expense.date.desc(), Expense.created_at.desc()).all()
         return jsonify([expense.to_dict() for expense in expenses]), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -182,8 +178,8 @@ def add_expense():
         
         if not data:
             return jsonify({'error': 'No data provided'}), 400
-        
-        required_fields = ['amount', 'description', 'category', 'date']
+
+        required_fields = ['merchant', 'description', 'amount', 'category', 'payment_method', 'date']
         for field in required_fields:
             field_value = data.get(field)
             if field not in data or not field_value or str(field_value).strip() == '':
@@ -198,32 +194,35 @@ def add_expense():
             return jsonify({'error': 'Invalid amount format'}), 400
         
         # Validate description and category
+        merchant_stripped = data['merchant'].strip()
         desc_stripped = data['description'].strip()
         cat_stripped = data['category'].strip()
-        
+        payment_method_stripped = data['payment_method'].strip()
+
         if not desc_stripped:
             return jsonify({'error': 'Description cannot be empty'}), 400
-            
         if not cat_stripped:
             return jsonify({'error': 'Category cannot be empty'}), 400
-        
+
         # Validate date
         try:
             expense_date = datetime.strptime(data['date'], '%Y-%m-%d').date()
         except ValueError:
             return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
-        
+
         expense = Expense(
-            amount=amount,
+            merchant=merchant_stripped,
             description=desc_stripped,
+            amount=amount,
             category=cat_stripped,
+            payment_method=payment_method_stripped,
             date=expense_date,
             user_id=user_id
         )
-        
+
         db.session.add(expense)
         db.session.commit()
-        
+
         return jsonify({
             'message': 'Expense added successfully',
             'expense': expense.to_dict()
@@ -247,6 +246,9 @@ def update_expense(expense_id):
             return jsonify({'error': 'No data provided'}), 400
         
         # Update fields if provided
+        if 'merchant' in data:
+            expense.merchant = data['merchant'].strip()
+            
         if 'amount' in data:
             try:
                 amount = float(data['amount'])
@@ -261,7 +263,10 @@ def update_expense(expense_id):
         
         if 'category' in data:
             expense.category = data['category'].strip()
-        
+
+        if 'payment_method' in data:
+            expense.payment_method = data['payment_method'].strip()
+
         if 'date' in data:
             try:
                 expense.date = datetime.strptime(data['date'], '%Y-%m-%d').date()

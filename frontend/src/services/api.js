@@ -107,16 +107,6 @@ export const expenseService = {
     const response = await api.get('/dashboard/summary');
     return response.data;
   },
-
-  categorizeExpense: async (description) => {
-    const response = await api.post('/expenses/categorize', { description });
-    return response.data;
-  },
-
-  getAIInsights: async () => {
-    const response = await api.get('/insights');
-    return response.data;
-  },
 };
 
 export default api;
