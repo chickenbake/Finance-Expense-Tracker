@@ -8,6 +8,11 @@ const Expenses = () => {
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
+  const [paymentMethods, setPaymentMethods] = useState(() => {
+    // Load from localStorage if available
+    const stored = localStorage.getItem('paymentMethods');
+    return stored ? JSON.parse(stored) : [];
+  });
 
   // Helper function to get today's date in PST (Los Angeles timezone)
   const getTodayPST = () => {
@@ -35,15 +40,64 @@ const Expenses = () => {
   const [expandedDescription, setExpandedDescription] = useState(null);
 
   const categories = [
-    'Food and Dining',
-    'Transportation',
-    'Entertainment',
-    'Shopping',
-    'Bills and Utilities',
-    'Healthcare',
-    'Education',
-    'Travel',
-    'Savings',
+    // Food & Groceries
+    'Groceries',
+    'Eating Out',
+    'Coffee & Snacks',
+    // Transportation
+    'Public Transit',
+    'Rideshare & Taxi',
+    'Fuel & Gas',
+    'Car Payment',
+    'Car Maintenance',
+    'Parking & Tolls',
+    // Housing & Utilities
+    'Rent/Mortgage',
+    'Electricity',
+    'Water & Sewer',
+    'Internet',
+    'Mobile Phone',
+    'Home Maintenance',
+    // Insurance
+    'Health Insurance',
+    'Car Insurance',
+    'Home/Renters Insurance',
+    'Life Insurance',
+    // Healthcare
+    'Medical Bills',
+    'Pharmacy',
+    'Dental & Vision',
+    // Personal & Family
+    'Childcare',
+    'Pet Care',
+    'Personal Care',
+    'Fitness & Sports',
+    // Shopping
+    'Clothing & Accessories',
+    'Electronics',
+    'Home & Garden',
+    // Entertainment
+    'Streaming Services',
+    'Movies & Events',
+    'Hobbies',
+    // Education
+    'Tuition',
+    'Books & Supplies',
+    'Courses & Subscriptions',
+    // Travel
+    'Flights',
+    'Hotels & Lodging',
+    'Vacation',
+    // Savings & Investments
+    'Retirement',
+    'Emergency Fund',
+    'Investments',
+    // Gifts & Donations
+    'Gifts',
+    'Charity/Donations',
+    // Miscellaneous
+    'Taxes',
+    'Fees',
     'Other',
   ];
 
@@ -74,6 +128,7 @@ const Expenses = () => {
       } else {
         await expenseService.addExpense(formData);
       }
+      savePaymentMethods(formData.payment_method) 
       
       setFormData({
         merchant: '',
@@ -85,6 +140,7 @@ const Expenses = () => {
       });
       setShowForm(false);
       setEditingExpense(null);
+      setSuggestedCategory('');
       fetchExpenses();
     } catch (error) {
       console.error('Error saving expense:', error);
@@ -160,7 +216,9 @@ const Expenses = () => {
       try {
         console.log('🔍 Sending to AI:', description); // Debug
         
-        const response = await fetch('https://finance-expense-tracker-467666307950.us-central1.run.app/api/expenses/categorize', {
+        // For local tetsing
+        // const response = await fetch('https://finance-expense-tracker-467666307950.us-central1.run.app/api/expenses/categorize', {
+        const response = await fetch('http://localhost:5001/api/expenses/categorize', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -195,6 +253,16 @@ const Expenses = () => {
       setFormData(prev => ({ ...prev, category: '' }));
     }
   };
+
+  const savePaymentMethods = (method) => {
+    if (!method) return;
+    setPaymentMethods(prev => {
+      if (prev.includes(method)) return prev;
+      const updated = [...prev, method];
+      localStorage.setItem('paymentMethods', JSON.stringify(updated));
+      return updated;
+    })
+  }
 
   return (
     <div>
@@ -306,7 +374,13 @@ const Expenses = () => {
                     value={formData.payment_method}
                     onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
                     placeholder="e.g., Chase Credit Card ending in 0000"
-                  />  
+                    list="payment-methods-list"
+                  />
+                  <datalist id="payment-methods-list">
+                    {paymentMethods.map((method, idx) => (
+                      <option key={idx} value={method} />
+                    ))}
+                  </datalist>
                 </div>
 
                 <div>

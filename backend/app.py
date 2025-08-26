@@ -457,7 +457,7 @@ if __name__ == '__main__':
             print("Local: Database tables created")
         except Exception as e:
             print(f"Local: Database error: {e}")
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5001)
 else:
     # For Cloud Run production
     with app.app_context():
