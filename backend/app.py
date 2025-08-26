@@ -19,7 +19,7 @@ app = Flask(__name__)
 def get_database_url():
     # For Cloud SQL
     if os.getenv('CLOUD_SQL_CONNECTION_NAME'):
-        db_user = os.getenv('DB_USER', 'postgres')
+        db_user = os.getenv('DB_USER')
         db_pass = os.getenv('DB_PASS')
         db_name = os.getenv('DB_NAME', 'expense_tracker')
         connection_name = os.getenv('CLOUD_SQL_CONNECTION_NAME')
