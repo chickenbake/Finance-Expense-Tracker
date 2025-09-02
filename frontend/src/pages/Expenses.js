@@ -8,6 +8,8 @@ const Expenses = () => {
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
+  const [receiptFile, setReceiptFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   // Helper function to get today's date in PST (Los Angeles timezone)
   const getTodayPST = () => {
@@ -131,6 +133,55 @@ const Expenses = () => {
     });
   };
 
+  const handleUploadReceipt = async () => {
+    if (!receiptFile) return;
+    
+    setUploading(true);
+    setError('');
+    
+    try {
+      const formDataObj = new FormData();
+      formDataObj.append('file', receiptFile);
+
+      const response = await fetch('http://localhost:5001/api/expenses/upload-receipt', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: formDataObj
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Receipt Parsed:', data);
+        
+        // Pre-fill form with parsed data
+        if (data.parsed_expense) {
+          setFormData({
+            merchant: data.parsed_expense.merchant || '',
+            amount: data.parsed_expense.amount || '',
+            description: data.parsed_expense.description || '',
+            category: data.parsed_expense.category || '',
+            payment_method: data.parsed_expense.payment_method || '',
+            date: data.parsed_expense.date || getTodayPST()
+          });
+          setShowForm(true);
+        }
+        
+        // Reset file input
+        setReceiptFile(null);
+      } else {
+        const errData = await response.json();
+        setError(errData.error || 'Failed to upload receipt');
+      }
+    } catch (err) {
+      console.error('Upload failed:', err);
+      setError('Failed to upload receipt');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   // Helper function to truncate text with expand option
   const truncateText = (text, maxLength = 50) => {
     if (!text) return '';
@@ -196,6 +247,7 @@ const Expenses = () => {
     }
   };
 
+
   return (
     <div>
       <Navbar />
@@ -206,12 +258,13 @@ const Expenses = () => {
             <span className="text-sm text-gray-500">
               Today (PST): {getTodayPST()}
             </span>
-            <button
-              onClick={() => setShowForm(true)}
-              className="btn-primary"
-            >
+            <button onClick={() => setShowForm(true)} className="btn-primary">
               Add Expense
             </button>
+            <input key={receiptFile ? receiptFile.name : 'empty'} type="file" accept=".jpg, .jpeg, .png, .pdf" onChange={(e) => setReceiptFile(e.target.files[0])} className="ml-4" />
+              <button onClick={handleUploadReceipt} className="btn-secondary" disabled={!receiptFile || uploading}>
+                {uploading ? 'Uploading...' : 'Upload Receipt'} 
+              </button>
           </div>
         </div>
 

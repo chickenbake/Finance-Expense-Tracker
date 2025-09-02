@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import os
 from dotenv import load_dotenv
 from ai_categorization import ai_analyzer
+from receipt_parser import extract_receipt_data, parse_receipt
 from flask_migrate import Migrate
 
 # TEST
@@ -94,6 +95,9 @@ class Expense(db.Model):
         }
 
 # Routes
+
+
+# Users
 @app.route('/api/register', methods=['POST'])
 def register():
     try:
@@ -159,6 +163,9 @@ def login():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
+
+# Expenses
 @app.route('/api/expenses', methods=['GET'])
 @jwt_required()
 def get_expenses():
@@ -301,6 +308,60 @@ def delete_expense(expense_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/expenses/categorize', methods=['POST'])
+@jwt_required()
+def categorize_expense():
+    try:
+        data = request.get_json()
+        if not data or not data.get('description'):
+            return jsonify({'error': 'Description is required'}), 400
+        
+        description = data['description'].strip()
+        category = ai_analyzer.categorize_expense(description)
+        
+        return jsonify({
+            'suggested_category': category,
+            'description': description
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('api/expenses/upload-receipt', method=['POST'])
+@jwt_required()
+def upload_receipt():
+    try:
+        user_id = int(get_jwt_identity())
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file part in the request'}), 400
+        
+        file = request.files['file']
+
+        if file.filename == '':
+            return jsonify({'error': 'No selected file'}), 400
+        
+        # Save file temporarily
+        temp_path = f"temp/{file.filename}"
+        os.makedirs(os.path.dirname(temp_path), exist_ok=True)
+        file.save(temp_path)
+
+        # OCR
+        ocr_text = extract_receipt_data(temp_path)
+
+        # Parse OCR text with GPT-2
+        expense_data = parse_receipt(ocr_text)
+
+        # Attach user_id for saving immediately
+        expense_data['user_id'] = user_id
+
+        return jsonify({'parsed_expense': expense_data}), 200
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+
+# Dashboard
 @app.route('/api/dashboard/summary', methods=['GET'])
 @jwt_required()
 def get_dashboard_summary():
@@ -358,25 +419,6 @@ def get_dashboard_summary():
             'daily_spending': sorted_daily_totals,
             'total_current_month': sum(category_totals.values()),
             'total_last_30_days': sum(daily_totals.values())
-        }), 200
-        
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/expenses/categorize', methods=['POST'])
-@jwt_required()
-def categorize_expense():
-    try:
-        data = request.get_json()
-        if not data or not data.get('description'):
-            return jsonify({'error': 'Description is required'}), 400
-        
-        description = data['description'].strip()
-        category = ai_analyzer.categorize_expense(description)
-        
-        return jsonify({
-            'suggested_category': category,
-            'description': description
         }), 200
         
     except Exception as e:
@@ -448,6 +490,8 @@ def root():
 @app.route('/api/health', methods=['GET'])
 def health_check():
     return jsonify({'status': 'healthy', 'timestamp': datetime.utcnow().isoformat()}), 200
+
+
 
 if __name__ == '__main__':
     # For local development only
