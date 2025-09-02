@@ -23,7 +23,7 @@ steps:
     - '--allow-unauthenticated'
     - '--add-cloudsql-instances=finance-expenses-app:us-central1:expense-tracker-db'
     # Set environment variables (you'll need to set secrets in Cloud Run console manually)
-    - '--set-env-vars=DB_USER=postgres,DB_NAME=expense_tracker,CLOUD_SQL_CONNECTION_NAME=finance-expenses-app:us-central1:expense-tracker-db'
+    - '--set-env-vars=DB_USER=chickenbake,DB_NAME=expense_tracker,CLOUD_SQL_CONNECTION_NAME=finance-expenses-app:us-central1:expense-tracker-db'
     # NOTE: Set SECRET_KEY, JWT_SECRET_KEY, HUGGING_FACE_TOKEN, and DB_PASS manually in Cloud Run console
 
 # --- Frontend Steps ---

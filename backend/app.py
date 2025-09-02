@@ -20,7 +20,7 @@ app = Flask(__name__)
 def get_database_url():
     # For Cloud SQL
     if os.getenv('CLOUD_SQL_CONNECTION_NAME'):
-        db_user = os.getenv('DB_USER', 'postgres')
+        db_user = os.getenv('DB_USER')
         db_pass = os.getenv('DB_PASS')
         db_name = os.getenv('DB_NAME', 'expense_tracker')
         connection_name = os.getenv('CLOUD_SQL_CONNECTION_NAME')
@@ -501,7 +501,7 @@ if __name__ == '__main__':
             print("Local: Database tables created")
         except Exception as e:
             print(f"Local: Database error: {e}")
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5001)
 else:
     # For Cloud Run production
     with app.app_context():
