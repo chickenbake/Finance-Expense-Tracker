@@ -9,14 +9,18 @@ def extract_receipt_data(image_path):
 
     # OCR
     ocr = PaddleOCR(lang='en')
-    result = ocr.ocr(thresh, cls=True)
+    result = ocr.predict(thresh, cls=True)
 
     # Combine text lines
     lines = []
     for line in result:
         for word_info in line:
             lines.append(word_info[1][0])
-    return "\n".join(lines)
+
+    extracted_text = "\n".join(lines)
+    print("Extracted Text:")
+    print(extracted_text)
+    return extracted_text
 
 def parse_receipt(ocr_text):
     """

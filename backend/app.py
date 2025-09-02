@@ -327,26 +327,32 @@ def categorize_expense():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('api/expenses/upload-receipt', method=['POST'])
-@jwt_required()
+@app.route('/api/expenses/upload-receipt', methods=['POST'])
 def upload_receipt():
     try:
         user_id = int(get_jwt_identity())
+        print(f"Upload request from user {user_id}")  # Debug
         if 'file' not in request.files:
             return jsonify({'error': 'No file part in the request'}), 400
         
         file = request.files['file']
+        print(f"File received: {file.filename}")  # Debug
 
         if file.filename == '':
             return jsonify({'error': 'No selected file'}), 400
         
         # Save file temporarily
-        temp_path = f"temp/{file.filename}"
-        os.makedirs(os.path.dirname(temp_path), exist_ok=True)
+        temp_dir = os.path.join(os.getcwd(), 'temp')
+        os.makedirs(temp_dir, exist_ok=True)
+        temp_path = os.path.join(temp_dir, file.filename)
         file.save(temp_path)
+        print(f"File saved to: {temp_path}")  # Debug
 
         # OCR
+        print("Starting OCR...")  # Debug
         ocr_text = extract_receipt_data(temp_path)
+        print(f"OCR completed. Text length: {len(ocr_text)}")  # Debug
+
 
         # Parse OCR text with GPT-2
         expense_data = parse_receipt(ocr_text)

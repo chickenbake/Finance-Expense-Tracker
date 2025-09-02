@@ -8,16 +8,13 @@ const Expenses = () => {
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
-<<<<<<< HEAD
   const [receiptFile, setReceiptFile] = useState(null);
   const [uploading, setUploading] = useState(false);
-=======
   const [paymentMethods, setPaymentMethods] = useState(() => {
     // Load from localStorage if available
     const stored = localStorage.getItem('paymentMethods');
     return stored ? JSON.parse(stored) : [];
   });
->>>>>>> 43ad3175b73ce1c66efcb49d7ea9f960b01bb870
 
   // Helper function to get today's date in PST (Los Angeles timezone)
   const getTodayPST = () => {
@@ -133,7 +130,7 @@ const Expenses = () => {
       } else {
         await expenseService.addExpense(formData);
       }
-      savePaymentMethods(formData.payment_method) 
+      savePaymentMethods(formData.payment_method);
       
       setFormData({
         merchant: '',
@@ -193,6 +190,7 @@ const Expenses = () => {
   };
 
   const handleUploadReceipt = async () => {
+    console.log('handleUploadReceipt called');
     if (!receiptFile) return;
     
     setUploading(true);
@@ -308,8 +306,6 @@ const Expenses = () => {
     }
   };
 
-<<<<<<< HEAD
-=======
   const savePaymentMethods = (method) => {
     if (!method) return;
     setPaymentMethods(prev => {
@@ -317,10 +313,8 @@ const Expenses = () => {
       const updated = [...prev, method];
       localStorage.setItem('paymentMethods', JSON.stringify(updated));
       return updated;
-    })
+    });
   }
->>>>>>> 43ad3175b73ce1c66efcb49d7ea9f960b01bb870
-
   return (
     <div>
       <Navbar />
@@ -334,10 +328,24 @@ const Expenses = () => {
             <button onClick={() => setShowForm(true)} className="btn-primary">
               Add Expense
             </button>
-            <input key={receiptFile ? receiptFile.name : 'empty'} type="file" accept=".jpg, .jpeg, .png, .pdf" onChange={(e) => setReceiptFile(e.target.files[0])} className="ml-4" />
-              <button onClick={handleUploadReceipt} className="btn-secondary" disabled={!receiptFile || uploading}>
-                {uploading ? 'Uploading...' : 'Upload Receipt'} 
-              </button>
+            {/* Hidden file input */}
+            <input
+              type="file"
+              accept=".jpg, .jpeg, .png, .pdf"
+              style={{ display: 'none' }}
+              id="receipt-upload"
+              onChange={(e) => {
+                setReceiptFile(e.target.files[0]);
+                handleUploadReceipt(); // Automatically upload after selection
+              }}
+            />
+            <button
+              className="btn-secondary"
+              onClick={() => document.getElementById('receipt-upload').click()}
+              disabled={uploading}
+            >
+              {uploading ? 'Uploading...' : 'Upload Receipt'}
+            </button>
           </div>
         </div>
 
