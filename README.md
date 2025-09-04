@@ -16,6 +16,27 @@ A full-stack expense tracking application with AI-powered categorization, built 
 - **Responsive Design**: Works on desktop and mobile
 - **Cloud Deployment**: Deployed on Google Cloud Run with Cloud SQL
 
+## 🧾 OCR Receipt Reader
+
+The application includes an OCR-powered receipt reader for fast expense entry:
+
+- **Receipt Upload:** Upload images or PDFs of receipts directly in the app.
+- **Text Extraction:** Uses [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) for high-accuracy text extraction from receipts.
+- **Custom GPT-2 Model:** Extracted text is processed by a custom GPT-2 model to intelligently parse merchant, amount, date, and line items.
+- **Auto-Fill:** Parsed receipt data is automatically filled into the expense form for review and quick saving.
+
+**How it works:**
+1. Go to the expense entry form and upload your receipt.
+2. The app extracts and parses the receipt details using OCR and AI.
+3. Review and confirm the auto-filled expense data before saving.
+
+**Tech Used:**  
+- PaddleOCR (Python)  
+- Custom GPT-2 model for receipt parsing  
+- Integrated with Flask backend
+
+---
+
 ## 🛠️ Tech Stack
 
 ### Backend

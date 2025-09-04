@@ -110,7 +110,7 @@ class AIExpenseAnalyzer:
                     print(f"AI suggests: {best_category} (confidence: {confidence:.2f})")  # Debug line
                     
                     # Only use AI result if confidence is reasonable
-                    if confidence > 0.17:
+                    if confidence > 0.10:
                         return best_category
                     else:
                         print(f"Low confidence, using fallback")
