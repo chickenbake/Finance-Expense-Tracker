@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 import os
 from dotenv import load_dotenv
@@ -328,10 +329,10 @@ def categorize_expense():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/expenses/upload-receipt', methods=['POST'])
+@jwt_required()
 def upload_receipt():
     try:
         user_id = int(get_jwt_identity())
-        print(f"Upload request from user {user_id}")  # Debug
         if 'file' not in request.files:
             return jsonify({'error': 'No file part in the request'}), 400
         
@@ -341,19 +342,36 @@ def upload_receipt():
         if file.filename == '':
             return jsonify({'error': 'No selected file'}), 400
         
+        # testing
+        filename = secure_filename(file.filename)
+
         # Save file temporarily
         temp_dir = os.path.join(os.getcwd(), 'temp')
         os.makedirs(temp_dir, exist_ok=True)
         temp_path = os.path.join(temp_dir, file.filename)
         file.save(temp_path)
-        print(f"File saved to: {temp_path}")  # Debug
 
         # OCR
         print("Starting OCR...")  # Debug
         ocr_text = extract_receipt_data(temp_path)
-        print(f"OCR completed. Text length: {len(ocr_text)}")  # Debug
 
-
+        # Save OCR output to a .txt file for testing
+        output_dir = os.path.join(os.getcwd(), 'ocr_outputs')
+        os.makedirs(output_dir, exist_ok=True)
+        
+        # Create a unique filename for the output text file
+        base_filename, _ = os.path.splitext(filename)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_filename = f"{base_filename}_{timestamp}.txt"
+        output_path = os.path.join(output_dir, output_filename)
+        
+        # Write the extracted text to the file
+        with open(output_path, 'w', encoding='utf-8') as f:
+            f.write("--- OCR Result ---\n\n")
+            f.write(ocr_text)
+            
+        print(f"✅ OCR text successfully saved to: {output_path}")
+        
         # Parse OCR text with GPT-2
         expense_data = parse_receipt(ocr_text)
 

@@ -11,7 +11,7 @@ const Expenses = () => {
   const [receiptFile, setReceiptFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState(() => {
-    // Load from localStorage if available
+  // Load from localStorage if available
     const stored = localStorage.getItem('paymentMethods');
     return stored ? JSON.parse(stored) : [];
   });
@@ -189,16 +189,15 @@ const Expenses = () => {
     });
   };
 
-  const handleUploadReceipt = async () => {
-    console.log('handleUploadReceipt called');
-    if (!receiptFile) return;
-    
+  const handleUploadReceipt = async (fileToUpload) => {
+    if (!fileToUpload) return ;
+ 
     setUploading(true);
     setError('');
-    
+  
     try {
       const formDataObj = new FormData();
-      formDataObj.append('file', receiptFile);
+      formDataObj.append('file', fileToUpload);
 
       const response = await fetch('http://localhost:5001/api/expenses/upload-receipt', {
         method: 'POST',
@@ -335,8 +334,11 @@ const Expenses = () => {
               style={{ display: 'none' }}
               id="receipt-upload"
               onChange={(e) => {
-                setReceiptFile(e.target.files[0]);
-                handleUploadReceipt(); // Automatically upload after selection
+                const file = e.target.files[0];
+                if (file) {
+                  setReceiptFile(file);
+                  handleUploadReceipt(file); // Automatically upload after selection
+                }
               }}
             />
             <button

@@ -8,8 +8,8 @@ def extract_receipt_data(image_path):
     _, thresh = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY)
 
     # OCR
-    ocr = PaddleOCR(lang='en')
-    result = ocr.predict(thresh, cls=True)
+    ocr = PaddleOCR(use_angle_cls=True, lang='en')
+    result = ocr.predict(thresh)
 
     # Combine text lines
     lines = []

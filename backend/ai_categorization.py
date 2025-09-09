@@ -10,7 +10,7 @@ class AIExpenseAnalyzer:
         if self.hf_token:
             self.hf_token = self.hf_token.strip()  # Remove any whitespace/newlines
         self.api_url = "https://api-inference.huggingface.co/models/facebook/bart-large-mnli"
-        print(f"HF Token exists: {bool(self.hf_token)}")  # Debug line
+        # print(f"HF Token exists: {bool(self.hf_token)}")  # Debug line
         
     def categorize_expense(self, description):
         """Categorize expense using Hugging Face API"""
