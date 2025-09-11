@@ -53,8 +53,8 @@ The application includes an OCR-powered receipt reader for fast expense entry:
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/chickenbake/Finance-Expense-Tracker.git
-   cd Finance-Expense-Tracker
+   git clone https://github.com/chickenbake/Personal-Expense-Tracker.git
+   cd Personal-Expense-Tracker
    ```
 
 2. **Backend Setup**

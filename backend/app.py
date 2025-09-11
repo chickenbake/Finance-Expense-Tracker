@@ -467,7 +467,7 @@ def root():
         'message': 'Personal Expense Tracker (PET) API',
         'version': '1.0',
         'description': 'Personal finance management API',
-        'documentation': 'https://github.com/chickenbake/Finance-Expense-Tracker',
+        'documentation': 'https://github.com/chickenbake/Personal-Expense-Tracker',
         'endpoints': {
             'health': {
                 'url': '/api/health',

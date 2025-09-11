@@ -3,14 +3,14 @@ echo Setting up Personal Expense Tracker (PET) for Local Development...
 
 echo.
 echo Starting Backend (Flask API)...
-cd "C:\Users\sol46ex\Porsche Projects\Finance Expense Tracker\backend"
+cd backend
 call venv\Scripts\activate
 #call source venv/bin/activate  # For Git Bash or WSL
 start cmd /k "python app.py"
 
 echo.
 echo Starting Frontend (React Development Server)...
-cd "C:\Users\sol46ex\Porsche Projects\Finance Expense Tracker\frontend"
+cd ..\frontend
 start cmd /k "npm start"
 
 echo.
