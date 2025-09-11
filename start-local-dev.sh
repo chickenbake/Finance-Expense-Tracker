@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Setting up Personal Expense Tracker..."
+echo "Setting up Personal Expense Tracker (PET)..."
 echo
 
 echo "Step 1: Setting up Python backend..."

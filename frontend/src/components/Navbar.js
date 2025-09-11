@@ -17,7 +17,7 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <Link to="/dashboard" className="text-white text-xl font-bold">
-              💰 Expense Tracker
+              💰 Personal Expense Tracker (PET)
             </Link>
           </div>
           

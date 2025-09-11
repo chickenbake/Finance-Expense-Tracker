@@ -267,8 +267,6 @@ const Expenses = () => {
       try {
         console.log('🔍 Sending to AI:', description); // Debug
         
-        // For local tetsing
-        // const response = await fetch('https://finance-expense-tracker-467666307950.us-central1.run.app/api/expenses/categorize', {
         const response = await fetch('http://localhost:5001/api/expenses/categorize', {
           method: 'POST',
           headers: {

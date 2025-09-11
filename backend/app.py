@@ -11,24 +11,13 @@ from ai_categorization import ai_analyzer
 from receipt_parser import extract_receipt_data, parse_receipt
 from flask_migrate import Migrate
 
-# TEST
-
 load_dotenv()
 
 app = Flask(__name__)
 
-# Cloud SQL configuration
+# Local database configuration
 def get_database_url():
-    # For Cloud SQL
-    if os.getenv('CLOUD_SQL_CONNECTION_NAME'):
-        db_user = os.getenv('DB_USER')
-        db_pass = os.getenv('DB_PASS')
-        db_name = os.getenv('DB_NAME', 'expense_tracker')
-        connection_name = os.getenv('CLOUD_SQL_CONNECTION_NAME')
-        
-        return f"postgresql://{db_user}:{db_pass}@/{db_name}?host=/cloudsql/{connection_name}"
-    
-    # For local development
+    # For local development only
     return os.getenv('DATABASE_URL', 'sqlite:///expense_tracker.db')
 
 # Configuration - Secure version
@@ -475,10 +464,10 @@ def get_ai_insights():
 @app.route('/', methods=['GET'])
 def root():
     return jsonify({
-        'message': 'Expense Tracker API',
+        'message': 'Personal Expense Tracker (PET) API',
         'version': '1.0',
         'description': 'Personal finance management API',
-        'documentation': 'https://github.com/your-username/expense-tracker',
+        'documentation': 'https://github.com/chickenbake/Finance-Expense-Tracker',
         'endpoints': {
             'health': {
                 'url': '/api/health',
@@ -519,11 +508,3 @@ if __name__ == '__main__':
         except Exception as e:
             print(f"Local: Database error: {e}")
     app.run(debug=True, host='0.0.0.0', port=5001)
-else:
-    # For Cloud Run production
-    with app.app_context():
-        try:
-            db.create_all()
-            print("Cloud Run: Database tables created successfully")
-        except Exception as e:
-            print(f"Cloud Run: Database error: {e}")

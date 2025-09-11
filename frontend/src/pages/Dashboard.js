@@ -51,7 +51,7 @@ const Dashboard = () => {
   const fetchAIInsights = async () => {
     try {
       setLoadingInsights(true);
-      const response = await fetch('https://finance-expense-tracker-467666307950.us-central1.run.app/api', {
+      const response = await fetch('http://localhost:5001/api', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
