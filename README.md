@@ -1,4 +1,4 @@
-# 💰 Finance Expense Tracker
+# 💰 Personal Expense Tracker
 
 A full-stack expense tracking application with AI-powered categorization, built with React and Flask, deployed on Google Cloud Platform.
 
@@ -147,7 +147,7 @@ gcloud run deploy finance-expense-tracker-frontend --image us-central1-docker.pk
 ## 📁 Project Structure
 
 ```
-Finance-Expense-Tracker/
+Personal-Expense-Tracker/
 ├── backend/                    # Flask API
 │   ├── app.py                 # Main application file
 │   ├── ai_service.py          # AI categorization service
