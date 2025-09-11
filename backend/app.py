@@ -337,7 +337,7 @@ def upload_receipt():
             return jsonify({'error': 'No file part in the request'}), 400
         
         file = request.files['file']
-        print(f"File received: {file.filename}")  # Debug
+        print(f"File received: {file.filename}")  # debug
 
         if file.filename == '':
             return jsonify({'error': 'No selected file'}), 400
@@ -345,29 +345,28 @@ def upload_receipt():
         # testing
         filename = secure_filename(file.filename)
 
-        # Save file temporarily
+        # save file temporarily
         temp_dir = os.path.join(os.getcwd(), 'temp')
         os.makedirs(temp_dir, exist_ok=True)
         temp_path = os.path.join(temp_dir, file.filename)
         file.save(temp_path)
 
         # OCR
-        print("Starting OCR...")  # Debug
+        print("Starting OCR...")  # debug
         ocr_text = extract_receipt_data(temp_path)
 
-        # Save OCR output to a .txt file for testing
+        # save OCR output to a .txt file for testing
         output_dir = os.path.join(os.getcwd(), 'ocr_outputs')
         os.makedirs(output_dir, exist_ok=True)
         
-        # Create a unique filename for the output text file
+        # create a unique filename for the output text file
         base_filename, _ = os.path.splitext(filename)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         output_filename = f"{base_filename}_{timestamp}.txt"
         output_path = os.path.join(output_dir, output_filename)
-        
-        # Write the extracted text to the file
+
+        # write the extracted text to the file
         with open(output_path, 'w', encoding='utf-8') as f:
-            f.write("--- OCR Result ---\n\n")
             f.write(ocr_text)
             
         print(f"✅ OCR text successfully saved to: {output_path}")
@@ -510,12 +509,6 @@ def root():
         'status': 'operational',
         'timestamp': datetime.utcnow().isoformat()
     }), 200
-
-@app.route('/api/health', methods=['GET'])
-def health_check():
-    return jsonify({'status': 'healthy', 'timestamp': datetime.utcnow().isoformat()}), 200
-
-
 
 if __name__ == '__main__':
     # For local development only
